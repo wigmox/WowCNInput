@@ -1,0 +1,6 @@
+
+<Bindings>
+    <Binding name="TOGGLE_WOWCNINPUT" description="切换中文输入" header="WowCNInput">
+        WowCNInput_Toggle();
+    </Binding>
+</Bindings>

@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: WowCNInput
+## Title-zhCN: |CFF33AAFF[辅助]|R中文输入插件 |cff7fff7f<WowCNInput>|r
+## Author: Wigmox
+## Version: 0.0.1
+## Notes: Chinese Input Method
+## Notes-zhCN: WoW 中文输入插件
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariables: INPUT_TYPE, SAVE_MEM, STICKY_SEC, HL_COLOR
+
+WowCNInput.xml
+WowCNInput.lua
+Pinyin_Dict.lua
