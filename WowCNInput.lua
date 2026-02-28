@@ -3,6 +3,10 @@
 -- 作者：Wigmox
 --------------------------------
 
+-- [按键绑定中文字符串] 用于 Bindings.xml 显示中文
+BINDING_HEADER_WOWCNINPUT = "WowCNInput 中文输入法"
+BINDING_NAME_TOGGLEWOWCNINPUT = "切换中文输入法"
+
 -- [全局变量] 使用 g 前缀标识
 local gPage = 1                    -- 当前页码
 local gCurCandidates = {}          -- 当前候选词列表
@@ -22,6 +26,28 @@ local hookedBoxes = {}
 local isCandidateMode = false
 local isEnglishConfirmed = false   -- 是否已确认输入英文（按回车后）
 local confirmedEnglishLength = 0   -- 已确认文本的长度，用于跳过已确认部分
+
+
+-- [目标编辑框列表] 所有可能需要输入中文的编辑框
+local targetBoxes = {
+    "ChatFrameEditBox",           -- 聊天框架编辑框
+    "MacroFrameText",             -- 宏命令大输入框
+    "MacroPopupEditBox",          -- 宏新建起名框
+    "GuildInfoEditBox",           -- 公会信息框
+    "GuildMOTDEditBox",           -- 公会公告框
+    "AddFriendNameEditBox",       -- 好友面板：添加好友
+    "AddIgnoreNameEditBox",       -- 好友面板：屏蔽玩家
+    "SendMailNameEditBox",        -- 邮件：收件人
+    "SendMailSubjectEditBox",     -- 邮件：主题
+    "SendMailBodyEditBox",        -- 邮件：正文
+    "BrowseName",                 -- 拍卖行搜索
+    "ChannelFrameDaughterFrameChannelName",
+    "StaticPopup1EditBox",        -- 各种系统弹窗输入框（如公会邀请、改名等）
+    "StaticPopup2EditBox",
+    "StaticPopup3EditBox",
+    "StaticPopup4EditBox",
+    "StaticPopup5EditBox"
+}
 
 --[[
     wciprint - 输出调试信息到聊天框
@@ -144,27 +170,6 @@ local function GetCodeLengthForWord(candidateWord, matchedLetters)
     return string.len(matchedLetters[1])
 end
 
--- [目标编辑框列表] 所有可能需要输入中文的编辑框
-local targetBoxes = {
-    "ChatFrameEditBox",           -- 聊天框架编辑框
-    "MacroFrameText",             -- 宏命令大输入框
-    "MacroPopupEditBox",          -- 宏新建起名框
-    "GuildInfoEditBox",           -- 公会信息框
-    "GuildMOTDEditBox",           -- 公会公告框
-    "AddFriendNameEditBox",       -- 好友面板：添加好友
-    "AddIgnoreNameEditBox",       -- 好友面板：屏蔽玩家
-    "SendMailNameEditBox",        -- 邮件：收件人
-    "SendMailSubjectEditBox",     -- 邮件：主题
-    "SendMailBodyEditBox",        -- 邮件：正文
-    "BrowseName",                 -- 拍卖行搜索
-    "ChannelFrameDaughterFrameChannelName",
-    "StaticPopup1EditBox",        -- 各种系统弹窗输入框（如公会邀请、改名等）
-    "StaticPopup2EditBox",
-    "StaticPopup3EditBox",
-    "StaticPopup4EditBox",
-    "StaticPopup5EditBox"
-}
-
 --[[
     HookAllKnownBoxes - 核心遍历挂载函数
     遍历所有目标编辑框并挂载输入法处理逻辑
@@ -192,20 +197,32 @@ function WowCNInput_OnLoad()
     wciprint("已适配：宏、好友、屏蔽、公会等全部输入框。")
     wciprint("输入字母自动弹出候选框。空格键选第1个字，数字键1-0可手动选取。")
     wciprint("翻页：英文模式',' 或 '-' 上一页，'.' 或 '=' 下一页。")
-    wciprint("开关：输入 /wi 关闭/开启中文输入。")
-    
-    SlashCmdList["WCI_SWITCH"] = function()
-        IME_ENABLED = not IME_ENABLED
-        if IME_ENABLED then 
-            wciprint("输入法已【开启】") 
-        else 
-            wciprint("输入法已【关闭】") 
-            WowCNInput:Hide() 
-        end
-    end
-    SLASH_WCI_SWITCH1 = "/winput"
-    SLASH_WCI_SWITCH2 = "/wi"
+    wciprint("开关：输入 /wi 或在按键设置中绑定快捷键")
 end
+
+--[[
+    WowCNInput_Toggle - 切换输入法开关状态
+    说明: 供按键绑定和斜杠命令调用
+]]
+function WowCNInput_Toggle()
+    IME_ENABLED = not IME_ENABLED
+    if IME_ENABLED then
+        -- 使用 |cff00ff00 把【开启】变成绿色，|r 恢复默认颜色
+        wciprint("中文输入已|cff00ff00【开启】|r")
+    else 
+        -- 使用 |cffff0000 把【关闭】变成红色，|r 恢复默认颜色
+        wciprint("中文输入已|cffff0000【关闭】|r")
+        -- 关闭时清除所有状态并隐藏候选框
+        ClearCandidateMode()
+    end
+end
+
+--[[
+    斜杠命令注册
+]]
+SlashCmdList["WCI_SWITCH"] = WowCNInput_Toggle
+SLASH_WCI_SWITCH1 = "/winput"
+SLASH_WCI_SWITCH2 = "/wi"
 
 --[[
     WowCNInput_OnEvent - 事件处理函数
@@ -216,7 +233,7 @@ function WowCNInput_OnEvent(event)
         if Pinyin_Dict then TB = Pinyin_Dict end
         HookAllKnownBoxes()
     elseif event == "ADDON_LOADED" or event == "MAIL_SHOW" or event == "AUCTION_HOUSE_SHOW" then
-        -- 当任何系统模块（如宏界面、公会界面）加载时，立刻尝试挂载
+        -- 当任何系统模块（如宏界面、公会界面）加载时，立刻尝试挂载所有目标编辑框
         HookAllKnownBoxes()
     end
 end
@@ -385,6 +402,7 @@ function HookNativeEditBox(box)
                     local absIdx = (gPage - 1) * 10 + 1 
                     if gCurCandidates[absIdx] then
                         isReplacing = true
+                        -- 获取选中词对应的拼音长度
                         local selectedWord = gCurCandidates[absIdx]
                         local codeLen = GetCodeLengthForWord(selectedWord, matchedCodes)
                         
@@ -393,11 +411,13 @@ function HookNativeEditBox(box)
                         local beforeCode = string.sub(searchPrevText, 1, string.len(searchPrevText) - string.len(prevLetters))
                         local newText = prefix .. beforeCode .. selectedWord
                         
+                        -- 计算剩余拼音（完整拼音 - 已选拼音）
                         local actualRemainingCode = ""
                         if codeLen > 0 and codeLen < string.len(lowerCode) then
                             actualRemainingCode = string.sub(lowerCode, codeLen + 1)
                         end
                         
+                        -- 如果有剩余拼音，追加到输入框
                         if actualRemainingCode and string.len(actualRemainingCode) > 0 then
                             newText = newText .. actualRemainingCode
                         end
@@ -405,8 +425,11 @@ function HookNativeEditBox(box)
                         this:SetText(newText)
                         isReplacing = false
                         
+                        -- 如果有剩余拼音，继续显示候选词
                         if actualRemainingCode and string.len(actualRemainingCode) > 0 then
+                            -- 更新已确认长度（选中词的长度）
                             confirmedEnglishLength = string.len(prefix) + string.len(beforeCode) + string.len(selectedWord)
+                            -- 继续显示剩余拼音的候选词
                             gPage = 1
                             UpdateCandidateDisplay(this, actualRemainingCode)
                         else
@@ -446,7 +469,7 @@ function HookNativeEditBox(box)
             return
         end
 
-        -- 3：正常输入字母，拼音匹配显示
+        -- 3：正常输入字母，匹配并显示候选框
         local s2, e2, currentLetters = string.find(text, "([a-zA-Z]+)$")
         if currentLetters then
             -- [核心] 如果有已确认的英文，只匹配其后新输入的字母部分
@@ -488,13 +511,16 @@ end
           inputCode - 输入的编码
 ]]
 function UpdateCandidateDisplay(box, inputCode)
+    -- 使用动态分段匹配获取候选词
     local candidates, matchedCodes, remaining = GetDynamicCandidates(inputCode)
     gCurCandidates = candidates
     gCurrentCode = inputCode
     
+    -- 设置候选模式状态
     isCandidateMode = true
     if WowCNInput.currentBox ~= box then
         WowCNInput:ClearAllPoints()
+        -- 候选框贴在输入框的"左下角"
         WowCNInput:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -2)
         WowCNInput.currentBox = box
     end
@@ -503,6 +529,7 @@ function UpdateCandidateDisplay(box, inputCode)
     
     local totalCount = table.getn(gCurCandidates)
     if totalCount == 0 then
+        -- 显示原始拼音，提示无匹配
         CanArea:SetText("...")
         InfoArea:SetText("0/0")
         WowCNInput:Show()
