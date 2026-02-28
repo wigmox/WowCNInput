@@ -12,12 +12,16 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Release Please
         id: release
         uses: googleapis/release-please-action@v4
@@ -26,3 +30,34 @@ jobs:
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # 只有当真正发布了 Release（即合并了发布 PR）时才运行打包
+      - name: Package AddOn
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          # 创建临时目录并复制需要打包的文件（排除 .git、.github 等）
+          mkdir -p temp/WowCNInput
+          cp -r \
+            WowCNInput.toc \
+            version.txt \
+            *.lua \
+            *.xml \
+            *.png \
+            *.jpg \
+            README.md \
+            LICENSE \
+            temp/WowCNInput/ 2>/dev/null || true
+          # 进入临时目录并打包成 zip
+          cd temp
+          zip -r ../WowCNInput.zip WowCNInput/
+          cd ..
+
+      - name: Upload Release Asset
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ./WowCNInput.zip
+          asset_name: WowCNInput.zip
+          asset_content_type: application/zip
