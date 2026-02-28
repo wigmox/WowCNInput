@@ -20,6 +20,7 @@ local hookedBoxes = {}
 
 -- 候选模式状态跟踪
 local isCandidateMode = false
+local isEnglishConfirmed = false   -- 是否已确认输入英文（按回车后）
 local confirmedEnglishLength = 0   -- 已确认文本的长度，用于跳过已确认部分
 
 --[[
@@ -28,6 +29,34 @@ local confirmedEnglishLength = 0   -- 已确认文本的长度，用于跳过已
 ]]
 local function wciprint(msg)
     DEFAULT_CHAT_FRAME:AddMessage("WowCNInput: "..msg, 0.0, 0.9, 0.9)
+end
+
+--[[
+    ClearCandidateMode - 清除候选模式状态
+]]
+local function ClearCandidateMode()
+    isCandidateMode = false
+    isEnglishConfirmed = false
+    confirmedEnglishLength = 0
+    gPage = 1
+    gCurCandidates = {}
+    gCurrentCode = ""
+    WowCNInput:Hide()
+end
+
+--[[
+    ConfirmEnglishInput - 确认输入英文（按回车后）
+    参数: textLen - 当前文本长度
+    说明: 候选模式下按回车确认输入英文，不发送消息，可继续输入拼音
+]]
+local function ConfirmEnglishInput(textLen)
+    isCandidateMode = false
+    isEnglishConfirmed = true
+    confirmedEnglishLength = textLen
+    gPage = 1
+    gCurCandidates = {}
+    gCurrentCode = ""
+    WowCNInput:Hide()
 end
 
 --[[
@@ -205,6 +234,7 @@ function HookNativeEditBox(box)
     local origOnTextChanged = box:GetScript("OnTextChanged")
     local origOnEditFocusGained = box:GetScript("OnEditFocusGained")
     local origOnEditFocusLost = box:GetScript("OnEditFocusLost")
+    local origOnEnterPressed = box:GetScript("OnEnterPressed")
     
     box:SetScript("OnEditFocusGained", function()
         if origOnEditFocusGained then origOnEditFocusGained() end
@@ -219,8 +249,31 @@ function HookNativeEditBox(box)
     end)
 
     box:SetScript("OnEditFocusLost", function()
-        WowCNInput:Hide()
+        -- [核心] 只有在非英文确认状态下才清除候选模式
+        -- 保留 confirmedEnglishLength 用于后续拼音匹配
+        if not isEnglishConfirmed then
+            ClearCandidateMode()
+        else
+            -- 英文确认状态只隐藏候选框，不清除状态
+            WowCNInput:Hide()
+        end
         if origOnEditFocusLost then origOnEditFocusLost() end
+    end)
+
+    -- [核心] 回车键拦截：候选模式下按回车确认输入英文，不发送消息
+    box:SetScript("OnEnterPressed", function()
+        -- 全局开关判断
+        if IME_ENABLED and isCandidateMode then
+            -- 确认输入英文，记录当前整个文本的长度
+            local text = this:GetText()
+            local textLen = string.len(text)
+            ConfirmEnglishInput(textLen)
+            -- 不调用原始函数，阻止发送消息
+            return
+        end
+        
+        -- 非候选模式，调用原始函数发送消息
+        if origOnEnterPressed then origOnEnterPressed() end
     end)
 
     box:SetScript("OnTextChanged", function()
@@ -231,7 +284,7 @@ function HookNativeEditBox(box)
         local textLen = string.len(text)
         
         if textLen == 0 then
-            WowCNInput:Hide()
+            ClearCandidateMode()
             return
         end
 
@@ -244,9 +297,36 @@ function HookNativeEditBox(box)
         local lastChar = string.sub(text, textLen, textLen)
         local isLetter = (lastChar >= "a" and lastChar <= "z") or (lastChar >= "A" and lastChar <= "Z")
         
+        -- [核心] 如果用户已确认输入英文，后续非字母输入不触发选词
+        if isEnglishConfirmed then
+            if isLetter then
+                -- 用户开始输入新的字母，检查是否需要重置状态
+                -- 只有当新输入的字母在已确认英文之后时，才开始新的候选模式
+                if textLen > confirmedEnglishLength then
+                    -- 重置候选模式状态，但保留 confirmedEnglishLength 用于拼音匹配
+                    isEnglishConfirmed = false
+                    isCandidateMode = true
+                else
+                    -- 用户删除了部分内容，重置状态
+                    ClearCandidateMode()
+                    return
+                end
+            else
+                -- 非字母输入（空格、数字等），不选词，直接返回
+                return
+            end
+        end
+        
         -- 获取去掉最后一个字符后的文本
         local prevText = string.sub(text, 1, textLen - 1)
-        local s1, e1, prevLetters = string.find(prevText, "([a-zA-Z]+)$")
+        
+        -- [核心] 如果有已确认的英文，只匹配其后新输入的部分
+        local searchPrevText = prevText
+        if confirmedEnglishLength > 0 then
+            searchPrevText = string.sub(prevText, confirmedEnglishLength + 1)
+        end
+        
+        local s1, e1, prevLetters = string.find(searchPrevText, "([a-zA-Z]+)$")
         
         -- 1：输入拼音，并且输入了非字母（数字选词、空格、或翻页符）
         if prevLetters and not isLetter then
@@ -270,8 +350,10 @@ function HookNativeEditBox(box)
                         local selectedWord = gCurCandidates[absIdx]
                         local codeLen = GetCodeLengthForWord(selectedWord, matchedCodes)
                         
-                        local beforeCode = string.sub(prevText, 1, string.len(prevText) - string.len(prevLetters))
-                        local newText = beforeCode .. selectedWord
+                        -- 保留已确认英文部分 + 替换匹配的拼音为候选词
+                        local prefix = string.sub(prevText, 1, confirmedEnglishLength)
+                        local beforeCode = string.sub(searchPrevText, 1, string.len(searchPrevText) - string.len(prevLetters))
+                        local newText = prefix .. beforeCode .. selectedWord
                         
                         local actualRemainingCode = ""
                         if codeLen > 0 and codeLen < string.len(lowerCode) then
@@ -286,7 +368,7 @@ function HookNativeEditBox(box)
                         isReplacing = false
                         
                         if actualRemainingCode and string.len(actualRemainingCode) > 0 then
-                            confirmedEnglishLength = string.len(beforeCode) + string.len(selectedWord)
+                            confirmedEnglishLength = string.len(prefix) + string.len(beforeCode) + string.len(selectedWord)
                             gPage = 1
                             UpdateCandidateDisplay(this, actualRemainingCode)
                         else
@@ -306,8 +388,10 @@ function HookNativeEditBox(box)
                         local selectedWord = gCurCandidates[absIdx]
                         local codeLen = GetCodeLengthForWord(selectedWord, matchedCodes)
                         
-                        local beforeCode = string.sub(prevText, 1, string.len(prevText) - string.len(prevLetters))
-                        local newText = beforeCode .. selectedWord
+                        -- 保留已确认英文部分 + 替换匹配的拼音为候选词
+                        local prefix = string.sub(prevText, 1, confirmedEnglishLength)
+                        local beforeCode = string.sub(searchPrevText, 1, string.len(searchPrevText) - string.len(prevLetters))
+                        local newText = prefix .. beforeCode .. selectedWord
                         
                         local actualRemainingCode = ""
                         if codeLen > 0 and codeLen < string.len(lowerCode) then
@@ -322,7 +406,7 @@ function HookNativeEditBox(box)
                         isReplacing = false
                         
                         if actualRemainingCode and string.len(actualRemainingCode) > 0 then
-                            confirmedEnglishLength = string.len(beforeCode) + string.len(selectedWord)
+                            confirmedEnglishLength = string.len(prefix) + string.len(beforeCode) + string.len(selectedWord)
                             gPage = 1
                             UpdateCandidateDisplay(this, actualRemainingCode)
                         else
@@ -365,14 +449,24 @@ function HookNativeEditBox(box)
         -- 3：正常输入字母，拼音匹配显示
         local s2, e2, currentLetters = string.find(text, "([a-zA-Z]+)$")
         if currentLetters then
-            local lowerCode = string.lower(currentLetters)
-            
-            if confirmedEnglishLength > 0 and string.len(text) > confirmedEnglishLength then
-                isCandidateMode = false
+            -- [核心] 如果有已确认的英文，只匹配其后新输入的字母部分
+            local searchLetters = currentLetters
+            if confirmedEnglishLength > 0 then
+                local afterConfirmed = string.sub(text, confirmedEnglishLength + 1)
+                local s3, e3, newLetters = string.find(afterConfirmed, "([a-zA-Z]+)$")
+                if newLetters then
+                    searchLetters = newLetters
+                else
+                    -- 已确认英文后面没有字母，不显示候选框
+                    WowCNInput:Hide()
+                    return
+                end
             end
             
+            local lowerCode = string.lower(searchLetters)
+            
+            -- 用户删除了部分内容，重置状态
             if confirmedEnglishLength > 0 and string.len(text) < confirmedEnglishLength then
-                isCandidateMode = false
                 confirmedEnglishLength = 0
             end
 
