@@ -1,5 +1,12 @@
 # 更新日志
 
+## [0.0.3](https://github.com/wigmox/WowCNInput/compare/v0.0.2...v0.0.3) (2026-02-28)
+
+
+### Bug Fixes
+
+* 修复按键绑定，可以通过绑定按键切换中文输入。 ([913156d](https://github.com/wigmox/WowCNInput/commit/913156d3847eedc9325572c89abd86de013b6925))
+
 ## [0.0.2] - 2026-02-28
 ### 候选双行显示
 拼音候选单独显示一行
