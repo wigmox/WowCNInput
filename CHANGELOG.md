@@ -1,5 +1,12 @@
 # 更新日志
 
+## [0.0.4](https://github.com/wigmox/WowCNInput/compare/v0.0.3...v0.0.4) (2026-02-28)
+
+
+### Bug Fixes
+
+* Enhance release workflow with asset packaging and upload ([467f44c](https://github.com/wigmox/WowCNInput/commit/467f44c5483933b999de2e8c83600f03fb6bf5e9))
+
 ## [0.0.3](https://github.com/wigmox/WowCNInput/compare/v0.0.2...v0.0.3) (2026-02-28)
 
 
