@@ -6,25 +6,31 @@
 	<Script file="WowCNInput.lua" />
 
 	<Frame name="WowCNInput" parent="UIParent" hidden="true" frameStrata="TOOLTIP" toplevel="true">
-		<Size><AbsDimension x="500" y="30" /></Size>
+		<Size><AbsDimension x="500" y="60" /></Size>
 		<Anchors><Anchor point="CENTER" /></Anchors>
 		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
-			<EdgeSize><AbsValue val="20" /></EdgeSize>
-			<TileSize><AbsValue val="20" /></TileSize>
+			<EdgeSize><AbsValue val="24" /></EdgeSize>
+			<TileSize><AbsValue val="24" /></TileSize>
 			<BackgroundInsets><AbsInset left="4" right="4" top="4" bottom="4" /></BackgroundInsets>
 		</Backdrop>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="CanArea" inherits="GameFontNormal" hidden="false" justifyV="MIDDLE" justifyH="LEFT">
-					<Size><AbsDimension x="460" y="20" /></Size>
+				<FontString name="LettersArea" inherits="GameFontNormal" hidden="false" justifyV="MIDDLE" justifyH="LEFT">
+					<Size><AbsDimension x="460" y="25" /></Size>
 					<Anchors>
-						<Anchor point="LEFT"><Offset><AbsDimension x="8" y="0" /></Offset></Anchor>
+						<Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="-8" /></Offset></Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="CanArea" inherits="GameFontNormal" hidden="false" justifyV="MIDDLE" justifyH="LEFT">
+					<Size><AbsDimension x="460" y="26" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="-28" /></Offset></Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="InfoArea" inherits="GameFontNormalSmall" hidden="false" justifyV="MIDDLE" justifyH="RIGHT">
-					<Size><AbsDimension x="40" y="20" /></Size>
+					<Size><AbsDimension x="40" y="26" /></Size>
 					<Anchors>
-						<Anchor point="RIGHT"><Offset><AbsDimension x="-8" y="0" /></Offset></Anchor>
+						<Anchor point="TOPRIGHT"><Offset><AbsDimension x="-8" y="-8" /></Offset></Anchor>
 					</Anchors>
 				</FontString>
 			</Layer>
