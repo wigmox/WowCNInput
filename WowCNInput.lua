@@ -4,8 +4,8 @@
 --------------------------------
 
 -- [按键绑定中文字符串] 用于 Bindings.xml 显示中文
-BINDING_HEADER_WOWCNINPUT = "WowCNInput 中文输入法"
-BINDING_NAME_TOGGLEWOWCNINPUT = "切换中文输入法"
+BINDING_HEADER_WOWCNINPUT = "WowCNInput 中文输入"
+BINDING_NAME_TOGGLEWOWCNINPUT = "切换中文输入"
 
 -- [全局变量] 使用 g 前缀标识
 local gPage = 1                    -- 当前页码
@@ -21,6 +21,9 @@ local HL_COLOR = '|cff00dddd'
 local isReplacing = false
 local IME_ENABLED = true
 local hookedBoxes = {}
+
+-- 欢迎信息是否已显示的标志
+local welcomeShown = false
 
 -- 候选模式状态跟踪
 local isCandidateMode = false
@@ -52,9 +55,41 @@ local targetBoxes = {
 --[[
     wciprint - 输出调试信息到聊天框
     参数: msg - 要输出的消息字符串
+    说明: 使用 print 函数，确保消息能正常显示
 ]]
 local function wciprint(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("WowCNInput: "..msg, 0.0, 0.9, 0.9)
+    print("|cff00ddddWowCNInput:|r "..msg)
+end
+
+--[[
+    ShowWelcomeMessage - 显示欢迎信息
+    说明: 显示插件加载成功的提示信息
+]]
+local function ShowWelcomeMessage()
+    print("|cff00dddd中文输入法|r |cff00ff00【已加载】|r！")
+    print("已适配：聊天、宏、好友、屏蔽、公会等输入框。")
+    print("操作：输入字母自动弹出候选框。空格键选第1个字，数字键1-0可手动选字。")
+    print("翻页：英文模式'|cff00ff00,'|r' 或 '|cff00ff00-'|r' 上一页，|cff00ff00.'|r' 或 '|cff00ff00=|r' 下一页。")
+    print("开关：输入 |cff00ff00/wi|r 或按绑定的快捷键。")
+end
+
+--[[
+    InitWelcomeTimer - 初始化欢迎信息计时器
+    说明: 创建独立计时器，延迟显示欢迎信息
+]]
+local function InitWelcomeTimer()
+    local timer = CreateFrame("Frame")
+    timer.elapsed = 0
+    timer:SetScript("OnUpdate", function()
+        timer.elapsed = timer.elapsed + arg1
+        if timer.elapsed > 2 then
+            if not welcomeShown then
+                welcomeShown = true
+                ShowWelcomeMessage()
+            end
+            timer:SetScript("OnUpdate", nil)
+        end
+    end)
 end
 
 --[[
@@ -192,12 +227,6 @@ function WowCNInput_OnLoad()
     this:RegisterEvent("ADDON_LOADED")
     this:RegisterEvent("MAIL_SHOW")
     this:RegisterEvent("AUCTION_HOUSE_SHOW")
-    
-    wciprint("中文输入法 已加载！")
-    wciprint("已适配：宏、好友、屏蔽、公会等全部输入框。")
-    wciprint("输入字母自动弹出候选框。空格键选第1个字，数字键1-0可手动选取。")
-    wciprint("翻页：英文模式',' 或 '-' 上一页，'.' 或 '=' 下一页。")
-    wciprint("开关：输入 /wi 或在按键设置中绑定快捷键")
 end
 
 --[[
@@ -232,8 +261,13 @@ function WowCNInput_OnEvent(event)
     if event == "VARIABLES_LOADED" then
         if Pinyin_Dict then TB = Pinyin_Dict end
         HookAllKnownBoxes()
-    elseif event == "ADDON_LOADED" or event == "MAIL_SHOW" or event == "AUCTION_HOUSE_SHOW" then
-        -- 当任何系统模块（如宏界面、公会界面）加载时，立刻尝试挂载所有目标编辑框
+    elseif event == "ADDON_LOADED" then
+        -- [核心] 插件加载时启动欢迎信息计时器
+        if arg1 == "WowCNInput" and not welcomeShown then
+            InitWelcomeTimer()
+        end
+        HookAllKnownBoxes()
+    elseif event == "MAIL_SHOW" or event == "AUCTION_HOUSE_SHOW" then
         HookAllKnownBoxes()
     end
 end
