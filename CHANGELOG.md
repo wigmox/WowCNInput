@@ -1,5 +1,13 @@
 # 更新日志
 
+## [0.0.5](https://github.com/wigmox/WowCNInput/compare/v0.0.4...v0.0.5) (2026-03-01)
+
+
+### Bug Fixes
+
+* 修复按键绑定不显示中文问题。修复登录后聊天界面不显示中文输入说明信息的问题。 ([cf1c3df](https://github.com/wigmox/WowCNInput/commit/cf1c3dfeb95501bec72b70771e379f1553e6f2be))
+* 修复按键绑定不显示中文问题。修复登录后聊天界面不显示中文输入说明信息的问题。 ([d8df538](https://github.com/wigmox/WowCNInput/commit/d8df538aecccc834a5f7941d5fbcabe96e57b00f))
+
 ## [0.0.4](https://github.com/wigmox/WowCNInput/compare/v0.0.3...v0.0.4) (2026-02-28)
 
 
