@@ -1,5 +1,18 @@
 # 更新日志
 
+## [0.1.0](https://github.com/wigmox/WowCNInput/compare/v0.0.4...v0.1.0) (2026-03-01)
+
+
+### Features
+
+* - ✅ 支持中英文混合输入。输入字母后，如果需要输入英文，或者命令，按回车即可输入。后续还可以继续输入拼音选择中文。 ([c037fce](https://github.com/wigmox/WowCNInput/commit/c037fce1824944e4d5089d02ffdc02aee0f4442e))
+
+
+### Bug Fixes
+
+* 修复按键绑定，可以通过绑定按键切换中文输入。 ([bbc7c5e](https://github.com/wigmox/WowCNInput/commit/bbc7c5e94000cb160293cfc602e283040c19301c))
+* 修复按键绑定，可以通过绑定按键切换中文输入。 ([47b3298](https://github.com/wigmox/WowCNInput/commit/47b32983d40f5a177c5e7178cf4b23bb3aaac6a3))
+
 ## [0.0.4](https://github.com/wigmox/WowCNInput/compare/v0.0.3...v0.0.4) (2026-02-28)
 
 
