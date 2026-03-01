@@ -1,5 +1,5 @@
 <Bindings>
-    <Binding name="BINDING_NAME_TOGGLEWOWCNINPUT" header="BINDING_HEADER_WOWCNINPUT">
+    <Binding name="TOGGLEWOWCNINPUT" header="WOWCNINPUT">
         WowCNInput_Toggle()
     </Binding>
 </Bindings>
