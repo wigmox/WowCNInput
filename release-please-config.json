@@ -8,7 +8,8 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "WowCNInput.toc"
+          "path": "WowCNInput.toc",
+          "startPattern": "^## Version: "
         }
       ]
     }
