@@ -53,11 +53,11 @@ jobs:
 
       - name: Upload Release Asset
         if: ${{ steps.release.outputs.release_created }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./WowCNInput.zip
-          asset_name: WowCNInput.zip
-          asset_content_type: application/zip
+          files: |
+            ./WowCNInput.zip
+            # 如果你还想自定义 Release 正文，可以取消下面注释
+            # body_path: ./CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用默认 token
