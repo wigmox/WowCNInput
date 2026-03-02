@@ -55,6 +55,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.release.outputs.tag_name }}   # 显式指定标签
           files: |
             ./WowCNInput.zip
             # 如果你还想自定义 Release 正文，可以取消下面注释
