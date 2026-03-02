@@ -1,5 +1,12 @@
 # 更新日志
 
+## [0.0.7](https://github.com/wigmox/WowCNInput/compare/v0.0.6...v0.0.7) (2026-03-02)
+
+
+### Bug Fixes
+
+* 修复打包失败问题 ([6d91844](https://github.com/wigmox/WowCNInput/commit/6d91844a469b048f870c3bd5cdd38c137f2c44f4))
+
 ## [0.0.6](https://github.com/wigmox/WowCNInput/compare/v0.0.5...v0.0.6) (2026-03-02)
 
 
