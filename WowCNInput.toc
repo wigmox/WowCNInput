@@ -3,7 +3,7 @@
 ## Title-zhCN: |CFF33AAFF[辅助]|R中文输入插件 |cff7fff7f<WowCNInput>|r
 ## Author: Wigmox
 # x-release-please-start-version
-## Version: 0.0.7
+## Version: 0.0.8
 # x-release-please-end
 ## Notes: Chinese Input Method
 ## Notes-zhCN: WoW 中文输入插件
