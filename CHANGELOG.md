@@ -1,5 +1,14 @@
 # 更新日志
 
+## [0.0.6](https://github.com/wigmox/WowCNInput/compare/v0.0.5...v0.0.6) (2026-03-02)
+
+
+### Bug Fixes
+
+* Change upload action to softprops/action-gh-release@v2 ([3803353](https://github.com/wigmox/WowCNInput/commit/38033537aa6f99da0a914febcad4e60bb3a1cdf4))
+* 修复版本号无法正确修改的问题 ([92df0e5](https://github.com/wigmox/WowCNInput/commit/92df0e5dd98eeb5f5f5b1bfd9e1c4b6d365dfab3))
+* 修复版本号错误 ([3e1baf2](https://github.com/wigmox/WowCNInput/commit/3e1baf255211dbbe6026c3a267040524629a9d02))
+
 ## [0.0.5](https://github.com/wigmox/WowCNInput/compare/v0.0.4...v0.0.5) (2026-03-01)
 
 
