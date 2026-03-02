@@ -9,7 +9,7 @@
         {
           "type": "generic",
           "path": "WowCNInput.toc",
-          "startPattern": "^## Version: "
+          "startPattern": "## Version: "
         }
       ]
     }
