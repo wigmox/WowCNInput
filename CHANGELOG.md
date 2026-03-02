@@ -1,5 +1,12 @@
 # 更新日志
 
+## [0.0.6](https://github.com/wigmox/WowCNInput/compare/v0.0.5...v0.0.6) (2026-03-02)
+
+
+### Bug Fixes
+
+* 修复版本号错误 ([3e1baf2](https://github.com/wigmox/WowCNInput/commit/3e1baf255211dbbe6026c3a267040524629a9d02))
+
 ## [0.0.5](https://github.com/wigmox/WowCNInput/compare/v0.0.4...v0.0.5) (2026-03-01)
 
 
