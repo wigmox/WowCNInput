@@ -2,7 +2,7 @@
 ## Title: WowCNInput
 ## Title-zhCN: |CFF33AAFF[辅助]|R中文输入插件 |cff7fff7f<WowCNInput>|r
 ## Author: Wigmox
-## Version: 0.0.5
+## Version: 0.0.6
 ## Notes: Chinese Input Method
 ## Notes-zhCN: WoW 中文输入插件
 ## DefaultState: Enabled
