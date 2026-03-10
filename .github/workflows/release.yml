@@ -34,22 +34,36 @@ jobs:
       - name: Package AddOn
         if: ${{ steps.release.outputs.release_created }}
         run: |
-          # 创建临时目录并复制需要打包的文件（排除 .git、.github 等）
-          mkdir -p temp/WowCNInput
-          cp -r \
-            WowCNInput.toc \
-            version.txt \
-            *.lua \
-            *.xml \
-            *.png \
-            *.jpg \
-            README.md \
-            LICENSE \
-            temp/WowCNInput/ 2>/dev/null || true
-          # 进入临时目录并打包成 zip
+          # 定义插件在压缩包内的根目录名，游戏内看到的文件夹名
+          ADDON_DIR_NAME="WowCNInput"
+          # 定义输出的压缩包文件名
+          OUTPUT_ZIP="../WowCNInput.zip"
+
+          echo "Creating temporary directory structure..."
+          # 创建干净的临时目录结构，用于存放待打包的文件
+          mkdir -p "temp/${ADDON_DIR_NAME}"
+
+          echo "Copying all files (excluding .git and .github) ..."
+          # 使用 rsync 风格的方式复制所有文件，但排除不需要的目录
+          # 方法：启用 dotglob 来包含隐藏文件，然后用 tar 管道到 tar 来复制，同时排除指定模式
+          # 这是一个既包含所有文件（包括子目录）又排除特定目录的稳健方法
+          shopt -s dotglob  # 开启后，* 会包含以 . 开头的文件（如 .toc），但也会包含 .git 等
+          # 复制除 .git 和 .github 之外的所有内容到临时目录
+          # 使用 tar 来复制目录结构是最可靠的，它能完美处理所有文件和符号链接
+          tar cf - --exclude='.git' --exclude='.github' --exclude='temp' . | (cd "temp/${ADDON_DIR_NAME}" && tar xf -)
+          shopt -u dotglob  # 恢复 dotglob 设置，好习惯
+
+          echo "Contents of temp/${ADDON_DIR_NAME} (top level):"
+          ls -la "temp/${ADDON_DIR_NAME}"
+
+          echo "Creating zip archive..."
+          # 进入 temp 目录，将插件文件夹打包
           cd temp
-          zip -r ../WowCNInput.zip WowCNInput/
+          zip -r "${OUTPUT_ZIP}" "${ADDON_DIR_NAME}/"
           cd ..
+
+          echo "Zip file created successfully. Listing root directory:"
+          ls -l *.zip
 
       - name: Upload Release Asset
         if: ${{ steps.release.outputs.release_created }}

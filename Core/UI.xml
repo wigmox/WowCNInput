@@ -2,10 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
 	
-	<Script file="Pinyin_Dict.lua" />
-	<Script file="WowCNInput.lua" />
-
-	<Frame name="WowCNInput" parent="UIParent" hidden="true" frameStrata="TOOLTIP" toplevel="true">
+	<Frame name="WowCNInputFrame" parent="UIParent" hidden="true" frameStrata="TOOLTIP" toplevel="true">
 		<Size><AbsDimension x="500" y="60" /></Size>
 		<Anchors><Anchor point="CENTER" /></Anchors>
 		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
