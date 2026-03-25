@@ -1,5 +1,28 @@
 # 更新日志
 
+## [0.1.0](https://github.com/wigmox/WowCNInput/compare/v0.0.8...v0.1.0) (2026-03-25)
+
+
+### Features
+
+* 优化分词逻辑，现在可以设置2中分词逻辑，在设置界面可以手动调整。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 候选添加缓存功能，默认300条，设置界面可以调整。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 对调整输入框到顶部添加了开关选项，默认启用。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 添加了常用的声母字库，输入单个声母也会适配常用字 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 添加用户自定义词库，通过学习输入词库保存到自定义词库内，下次直接调用。默认保存 1000条，设置界面可以调整。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 添加设置界面，可以通过设置界面调整设置开关，词库等信息。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 添加词库，包括日常词库，魔兽专用词库等。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 设置界面添加了 Debug 开关，方便调试。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 重构 lua 文件，按功能分文件保存执行。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+
+
+### Bug Fixes
+
+* 修复了 宏界面、邮件正文等多行输入栏 输入英文自动回车的问题。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 修复了插件打包命令。 ([6ac2b1d](https://github.com/wigmox/WowCNInput/commit/6ac2b1d2b40388b71859276eb8b2c076e937171d))
+* 修改了自定义保存数据名 ([eb16e7b](https://github.com/wigmox/WowCNInput/commit/eb16e7b4fe2a3884740d1654651534461ccabaa7))
+* 统一化了保存函数命名格式 ([eb16e7b](https://github.com/wigmox/WowCNInput/commit/eb16e7b4fe2a3884740d1654651534461ccabaa7))
+
 ## [0.0.8](https://github.com/wigmox/WowCNInput/compare/v0.0.7...v0.0.8) (2026-03-02)
 
 
