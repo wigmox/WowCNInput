@@ -100,10 +100,10 @@ function WowCNUI_UpdateDisplay(box, inputCode)
         if string.sub(formattedUnmatched, 1, 1) == "'" then
             formattedUnmatched = string.sub(formattedUnmatched, 2)
         end
-        pinyinDisplay = WI_HL_COLOR .. formattedMatched .. "|r|cffaaaaaa" .. formattedUnmatched .. "|r"
+        pinyinDisplay = WowCNConfig:Get("hlColor") .. formattedMatched .. "|r|cffaaaaaa" .. formattedUnmatched .. "|r"
     else
         -- 完整匹配或无匹配：全部高亮
-        pinyinDisplay = WI_HL_COLOR .. formattedPinyin .. "|r"
+        pinyinDisplay = WowCNConfig:Get("hlColor") .. formattedPinyin .. "|r"
     end
     
     LettersArea:SetText(pinyinDisplay)
@@ -128,7 +128,7 @@ function WowCNUI_UpdateDisplay(box, inputCode)
         if candidateWord then
             local numLabel = math.mod(i, 10)
             if i == 1 then
-                cantext = cantext .. WI_HL_COLOR .. numLabel .. "." .. candidateWord .. "|r "
+                cantext = cantext .. WowCNConfig:Get("hlColor") .. numLabel .. "." .. candidateWord .. "|r "
             else
                 cantext = cantext .. numLabel .. "." .. candidateWord .. " "
             end
@@ -206,7 +206,7 @@ local function WowCNInput_DoSelectWord(box, prevText, searchPrevText, prevLetter
         -- [学习逻辑] 选词完成，判断是否需要学习
         -- 只有多次选词才学习（单次选词说明词库已有该词）
         -- 且用户词库功能已启用
-        if WowCNLearnState.selectCount > 1 and WI_USER_DICT_ENABLED then
+        if WowCNLearnState.selectCount > 1 and WowCNConfig:Get("userDictEnabled") then
             local fullWord = table.concat(WowCNLearnState.selectedWords)
             WowCNDB_LearnWord(WowCNLearnState.fullInputCode, fullWord)
         end
@@ -265,7 +265,7 @@ function WowCNInput_HookEditBox(box)
         if origOnEditFocusGained then origOnEditFocusGained() end
         
         -- 聊天输入框移至顶部（根据配置）
-        if this == ChatFrameEditBox and WI_CHAT_TOP then
+        if this == ChatFrameEditBox and WowCNConfig:Get("chatTop") then
             this:ClearAllPoints()
             this:SetPoint("TOP", UIParent, "TOP", 0, -50)
             this:SetWidth(500)

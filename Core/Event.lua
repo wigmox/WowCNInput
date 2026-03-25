@@ -127,12 +127,16 @@ function WowCNInput_OnEvent(event)
     
     if event == "VARIABLES_LOADED" then
         WowCNInput_Debug("VARIABLES_LOADED 事件处理")
+        -- 初始化配置数据库
+        WowCNConfig:InitializeDB()
         WowCNDB_InitUserDict()
         WowCNEvent_HookAllKnownBoxes()
     elseif event == "ADDON_LOADED" then
         -- 在 ADDON_LOADED 事件中也初始化用户词库（以防 VARIABLES_LOADED 未触发）
         if arg1 == "WowCNInput" then
             WowCNInput_Debug("ADDON_LOADED WowCNInput 事件处理")
+            -- 初始化配置数据库
+            WowCNConfig:InitializeDB()
             WowCNDB_InitUserDict()
             if not welcomeShown then
                 WowCNEvent_InitWelcomeTimer()

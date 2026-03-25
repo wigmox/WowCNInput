@@ -6,44 +6,84 @@
 -- [全局命名空间]
 WowCNInput = WowCNInput or {}
 
--- [Debug 输出函数]
-function WowCNInput_Debug(msg)
-    if WI_DEBUG then
-        DEFAULT_CHAT_FRAME:AddMessage("|cffff9900[WI Debug]|r " .. tostring(msg))
-    end
-end
-
 -- [按键绑定中文字符串] 用于 Bindings.xml 显示中文
 BINDING_HEADER_WOWCNINPUT = "WowCNInput 中文输入"
 BINDING_NAME_TOGGLEWOWCNINPUT = "切换中文输入"
 
 -- [配置表 - 常量]
-WowCNConfig = {
+WowCNConfig = {}
+
+-- ============================================================================
+-- 默认配置值
+-- ============================================================================
+WowCNConfig.DEFAULTS = {
+    chatTop = true,                 -- 聊天输入框位置
+    segMode = 1,                    -- 分词模式 (1=最大候选, 2=全部候选)
+    cacheEnabled = true,            -- 缓存启用
+    cacheMax = 300,                 -- 缓存最大数量
+    userDictEnabled = true,         -- 用户词库启用
+    userDictMax = 1000,             -- 用户词库最大数量
+    debugEnabled = false,           -- 调试模式
+    hlColor = '|cff00dddd',         -- 高亮颜色
 }
 
--- [SavedVariables 初始化 - 需要保存的配置]
--- 高亮颜色
-if WI_HL_COLOR == nil then WI_HL_COLOR = '|cff00dddd' end
+-- ============================================================================
+-- 配置初始化函数
+-- ============================================================================
+function WowCNConfig:InitializeDB()
+    -- 确保 WowCNInputDB 存在
+    if not WowCNInputDB then
+        WowCNInputDB = {}
+    end
+    
+    -- 初始化默认值
+    for key, defaultValue in pairs(self.DEFAULTS) do
+        if WowCNInputDB[key] == nil then
+            WowCNInputDB[key] = defaultValue
+        end
+    end
+    
+    -- 初始化词库启用状态（遍历已注册的词库）
+    if not WowCNInputDB.dictEnabled then
+        WowCNInputDB.dictEnabled = {}
+    end
+    if WowCNDB and WowCNDB._dicts then
+        for dictName, _ in pairs(WowCNDB._dicts) do
+            if WowCNInputDB.dictEnabled[dictName] == nil then
+                WowCNInputDB.dictEnabled[dictName] = true
+            end
+        end
+    end
+    
+    -- 初始化用户词库
+    if not WowCNInputDB.userDict then
+        WowCNInputDB.userDict = {}
+    end
+end
 
--- 调试模式
-if WI_DEBUG == nil then WI_DEBUG = false end
+-- ============================================================================
+-- 配置 Get/Set 函数
+-- ============================================================================
+function WowCNConfig:Get(key)
+    if not WowCNInputDB then
+        return self.DEFAULTS[key]
+    end
+    return WowCNInputDB[key]
+end
 
--- 缓存设置
-if WI_CACHE_MAX == nil then WI_CACHE_MAX = 300 end
-if WI_CACHE_ENABLED == nil then WI_CACHE_ENABLED = true end
+function WowCNConfig:Set(key, value)
+    if not WowCNInputDB then
+        WowCNInputDB = {}
+    end
+    WowCNInputDB[key] = value
+end
 
--- 用户词库设置
-if WI_USER_DICT_MAX == nil then WI_USER_DICT_MAX = 1000 end
-if WI_USER_DICT_ENABLED == nil then WI_USER_DICT_ENABLED = true end
-
--- 分词模式 (1=最大候选, 2=全部候选)
-if WI_SEG_MODE == nil then WI_SEG_MODE = 1 end
-
--- 聊天输入框位置
-if WI_CHAT_TOP == nil then WI_CHAT_TOP = true end
-
--- 词库启用状态
-WI_DICT_ENABLED = WI_DICT_ENABLED or {}
+-- [Debug 输出函数]
+function WowCNInput_Debug(msg)
+    if WowCNConfig:Get("debugEnabled") then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffff9900[WI Debug]|r " .. tostring(msg))
+    end
+end
 
 -- [设置界面常量]
 local FRAME_WIDTH = 700
@@ -61,9 +101,6 @@ local SECTIONS = {
 
 -- [当前选中的设置页]
 local currentSection = "general"
-
--- [词库启用状态]
-WI_DICT_ENABLED = WI_DICT_ENABLED or {}
 
 -- [设置界面命名空间]
 WowCNConfig.UI = {}
@@ -189,13 +226,14 @@ function WowCNConfig.UI:CreateMainFrame()
     debugButton:SetWidth(96)
     debugButton:SetHeight(21)
     debugButton:SetPoint("LEFT", reloadButton, "RIGHT", 10, 0)
-    local debugText = WI_DEBUG and "Debug: 开" or "Debug: 关"
+    local debugText = WowCNConfig:Get("debugEnabled") and "Debug: 开" or "Debug: 关"
     debugButton:SetText(debugText)
     debugButton:SetScript("OnClick", function()
-        WI_DEBUG = not WI_DEBUG
-        local newText = WI_DEBUG and "Debug: 开" or "Debug: 关"
+        local enabled = not WowCNConfig:Get("debugEnabled")
+        WowCNConfig:Set("debugEnabled", enabled)
+        local newText = enabled and "Debug: 开" or "Debug: 关"
         this:SetText(newText)
-        if WI_DEBUG then
+        if enabled then
             DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 调试模式已|cff00ff00【开启】|r")
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 调试模式已|cffff0000【关闭】|r")
@@ -441,8 +479,10 @@ function WowCNConfig.UI:CreateGeneralSection()
     
     -- 启用缓存
     local cacheEnabledCheck = self:CreateCheckbox(generalBox, "启用缓存",
-        function() return WI_CACHE_ENABLED end,
-        function(checked) WI_CACHE_ENABLED = checked end)
+        function() return WowCNConfig:Get("cacheEnabled") end,
+        function(checked) 
+            WowCNConfig:Set("cacheEnabled", checked)
+        end)
     cacheEnabledCheck:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 0, -5)
     
     local cacheLabel = generalBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -450,13 +490,13 @@ function WowCNConfig.UI:CreateGeneralSection()
     cacheLabel:SetText("缓存大小:")
     
     local cacheEdit = self:CreateEditBox(generalBox, 60,
-        function() return WI_CACHE_MAX end,
+        function() return WowCNConfig:Get("cacheMax") end,
         function(val)
-            WI_CACHE_MAX = val
+            WowCNConfig:Set("cacheMax", val)
             -- 立即生效：清理超限缓存
-            while WowCNDB._cacheSize > WI_CACHE_MAX do
+            while WowCNDB._cacheSize > val do
                 local count = 0
-                local halfRemove = math.ceil((WowCNDB._cacheSize - WI_CACHE_MAX) / 2)
+                local halfRemove = math.ceil((WowCNDB._cacheSize - val) / 2)
                 for k in pairs(WowCNDB._cache) do
                     WowCNDB._cache[k] = nil
                     WowCNDB._cacheSize = WowCNDB._cacheSize - 1
@@ -469,8 +509,10 @@ function WowCNConfig.UI:CreateGeneralSection()
     
     -- 启用用户词库
     local userDictEnabledCheck = self:CreateCheckbox(generalBox, "启用用户词库",
-        function() return WI_USER_DICT_ENABLED end,
-        function(checked) WI_USER_DICT_ENABLED = checked end)
+        function() return WowCNConfig:Get("userDictEnabled") end,
+        function(checked) 
+            WowCNConfig:Set("userDictEnabled", checked)
+        end)
     userDictEnabledCheck:SetPoint("TOPLEFT", cacheEnabledCheck, "BOTTOMLEFT", 0, -5)
     
     local userDictLabel = generalBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -478,13 +520,13 @@ function WowCNConfig.UI:CreateGeneralSection()
     userDictLabel:SetText("词库上限:")
     
     local userDictEdit = self:CreateEditBox(generalBox, 60,
-        function() return WI_USER_DICT_MAX end,
+        function() return WowCNConfig:Get("userDictMax") end,
         function(val)
-            WI_USER_DICT_MAX = val
+            WowCNConfig:Set("userDictMax", val)
             WowCNDB_UserDict._maxCount = val
             -- 立即生效：清理超限词条
             local currentCount = WowCNDB_GetUserDictCount()
-            while currentCount > WI_USER_DICT_MAX do
+            while currentCount > val do
                 WowCNDB_RemoveOldest()
                 currentCount = WowCNDB_GetUserDictCount()
             end
@@ -493,9 +535,9 @@ function WowCNConfig.UI:CreateGeneralSection()
     
     -- 聊天输入框位置开关
     local chatTopCheck = self:CreateCheckbox(generalBox, "聊天输入框移至顶部",
-        function() return WI_CHAT_TOP end,
+        function() return WowCNConfig:Get("chatTop") end,
         function(checked)
-            WI_CHAT_TOP = checked
+            WowCNConfig:Set("chatTop", checked)
             -- 立即生效
             if ChatFrameEditBox then
                 if checked then
@@ -543,7 +585,7 @@ function WowCNConfig.UI:CreateGeneralSection()
     segModeDropdown:SetPoint("LEFT", segModeLabel, "RIGHT", -15, -3)
     
     local function InitializeSegModeDropdown()
-        local selectedValue = UIDropDownMenu_GetSelectedValue(segModeDropdown) or (WI_SEG_MODE or 1)
+        local selectedValue = UIDropDownMenu_GetSelectedValue(segModeDropdown) or (WowCNConfig:Get("segMode") or 1)
         local info
         
         -- Mode: Greedy
@@ -553,7 +595,7 @@ function WowCNConfig.UI:CreateGeneralSection()
         info.func = function()
             UIDropDownMenu_SetSelectedValue(segModeDropdown, 1)
             UIDropDownMenu_SetText(SEG_MODE_GREEDY_TEXT, segModeDropdown)
-            WI_SEG_MODE = 1
+            WowCNConfig:Set("segMode", 1)
             DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 分词模式已切换为 " .. SEG_MODE_GREEDY_TEXT)
         end
         if info.value == selectedValue then
@@ -568,7 +610,7 @@ function WowCNConfig.UI:CreateGeneralSection()
         info.func = function()
             UIDropDownMenu_SetSelectedValue(segModeDropdown, 2)
             UIDropDownMenu_SetText(SEG_MODE_AII_TEXT, segModeDropdown)
-            WI_SEG_MODE = 2
+            WowCNConfig:Set("segMode", 2)
             DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 分词模式已切换为 " .. SEG_MODE_AII_TEXT)
         end
         if info.value == selectedValue then
@@ -580,7 +622,7 @@ function WowCNConfig.UI:CreateGeneralSection()
     segModeDropdown.initialize = InitializeSegModeDropdown
     UIDropDownMenu_Initialize(segModeDropdown, InitializeSegModeDropdown)
     UIDropDownMenu_SetWidth(150, segModeDropdown)
-    local currentSegMode = WI_SEG_MODE or 1
+    local currentSegMode = WowCNConfig:Get("segMode") or 1
     UIDropDownMenu_SetSelectedValue(segModeDropdown, currentSegMode)
     UIDropDownMenu_SetText(currentSegMode == 1 and SEG_MODE_GREEDY_TEXT or SEG_MODE_AII_TEXT, segModeDropdown)
 end
@@ -686,8 +728,10 @@ function WowCNConfig.UI:UpdateDictList()
         local meta = WowCNDB._meta and WowCNDB._meta[dictName] or {}
         
         -- 初始化启用状态
-        if WI_DICT_ENABLED[dictName] == nil then
-            WI_DICT_ENABLED[dictName] = true
+        local dictEnabled = WowCNInputDB.dictEnabled or {}
+        if dictEnabled[dictName] == nil then
+            dictEnabled[dictName] = true
+            WowCNInputDB.dictEnabled = dictEnabled
         end
         
         local item = {}
@@ -698,10 +742,12 @@ function WowCNConfig.UI:UpdateDictList()
         enableCheck:SetWidth(20)
         enableCheck:SetHeight(20)
         enableCheck:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos)
-        enableCheck:SetChecked(WI_DICT_ENABLED[dictName] and 1 or 0)
+        enableCheck:SetChecked(dictEnabled[dictName] and 1 or 0)
         enableCheck.dictName = dictName  -- 保存词库名称
         enableCheck:SetScript("OnClick", function()
-            WI_DICT_ENABLED[this.dictName] = (this:GetChecked() == 1)
+            local de = WowCNInputDB.dictEnabled or {}
+            de[this.dictName] = (this:GetChecked() == 1)
+            WowCNInputDB.dictEnabled = de
             -- 清除缓存，使设置立即生效
             WowCNDB._cache = {}
             WowCNDB._cacheSize = 0

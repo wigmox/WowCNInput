@@ -6,13 +6,6 @@
 -- [词库常量]
 WI_USER_DICT_NAME = "User_Dict"  -- 用户词库名称
 
--- [分词模式]
--- 1 = 最大候选：贪心最大化音节匹配（优先匹配更长音节）
--- 2 = 全部候选：保留所有可能，按音节长度排序
-if not WI_SEG_MODE then
-    WI_SEG_MODE = 1
-end
-
 -- [全局词库表]
 WowCNDB = {
     _dicts = {},          -- 已加载的词库列表 {dictName = dictData}
@@ -22,9 +15,9 @@ WowCNDB = {
     _loaded = false,      -- 词库是否加载完成
 }
 
--- 缓存最大值从 SavedVariables 读取（延迟初始化）
+-- 缓存最大值从配置读取
 function WowCNDB_GetCacheMax()
-    return WI_CACHE_MAX or 300
+    return WowCNConfig:Get("cacheMax") or 300
 end
 
 -- [用户自定义词库配置]
@@ -88,20 +81,20 @@ end
 
 --[[
     WowCNDB_InitUserDict - 初始化用户自定义词库
-    说明: 从 SavedVariables 加载用户词库并注册
+    说明: 从配置加载用户词库并注册
 ]]
 function WowCNDB_InitUserDict()
     WowCNDB_InitValidSyllables()
     
     WowCNInput_Debug("WowCNDB_InitUserDict 开始")
-    WowCNInput_Debug("  WI_USER_DICT: " .. tostring(WI_USER_DICT))
-    
-    if not WI_USER_DICT then
-        WI_USER_DICT = {}
+    WowCNInput_Debug("  userDict: " .. tostring(WowCNInputDB.userDict))
+    -- 确保用户词库数据存在
+    if not WowCNInputDB.userDict then
+        WowCNInputDB.userDict = {}
     end
     
-    WowCNDB_UserDict._data = WI_USER_DICT
-    WowCNDB_UserDict._maxCount = WI_USER_DICT_MAX or 1000
+    WowCNDB_UserDict._data = WowCNInputDB.userDict
+    WowCNDB_UserDict._maxCount = WowCNConfig:Get("userDictMax") or 1000
     
     -- 迁移旧数据格式（字符串数组 -> 带时间戳的对象数组）
     WowCNDB_MigrateUserDict()
@@ -264,7 +257,9 @@ end
 ]]
 function WowCNDB_ClearUserDict()
     WowCNDB_UserDict._data = {}
-    WI_USER_DICT = {}
+    if WowCNInputDB then
+        WowCNInputDB.userDict = {}
+    end
     WowCNDB_ClearCache()
 end
 
@@ -287,6 +282,16 @@ function WowCNDB_RegisterDict(dictName, dictData, dictMeta)
         if not WowCNDB._meta then WowCNDB._meta = {} end
         WowCNDB._meta[dictName] = dictMeta
     end
+    
+    -- 自动初始化词库启用状态（默认启用）
+    if WowCNInputDB then
+        if not WowCNInputDB.dictEnabled then
+            WowCNInputDB.dictEnabled = {}
+        end
+        if WowCNInputDB.dictEnabled[dictName] == nil then
+            WowCNInputDB.dictEnabled[dictName] = true
+        end
+    end
 end
 
 --[[
@@ -301,8 +306,11 @@ function WowCNDB_GetCandidates(inputCode)
         return {}, {}
     end
     
+    local cacheEnabled = WowCNConfig:Get("cacheEnabled")
+    local dictEnabled = WowCNInputDB and WowCNInputDB.dictEnabled or {}
+    
     -- 缓存检查（仅在启用缓存时）
-    if WI_CACHE_ENABLED and WowCNDB._cache[inputCode] then
+    if cacheEnabled and WowCNDB._cache[inputCode] then
         local cached = WowCNDB._cache[inputCode]
         return cached.candidates, cached.matchedCodes
     end
@@ -314,7 +322,7 @@ function WowCNDB_GetCandidates(inputCode)
     -- 直接查找 O(1) - 遍历词库列表，但每个词库只做一次哈希查找
     for dictName, dictData in pairs(WowCNDB._dicts) do
         -- 检查词库是否启用
-        if WI_DICT_ENABLED[dictName] ~= false then
+        if dictEnabled[dictName] ~= false then
             local words = dictData[inputCode]
             if words then
                 for i = 1, table.getn(words) do
@@ -337,7 +345,7 @@ function WowCNDB_GetCandidates(inputCode)
     end
     
     -- 仅在启用缓存时更新缓存
-    if WI_CACHE_ENABLED then
+    if cacheEnabled then
         WowCNDB_UpdateCache(inputCode, candidates, matchedCodes)
     end
     
@@ -827,7 +835,7 @@ function WowCNDB_DynamicMatch(inputLetters)
     --    匹配所有可能的前缀：ni, nihao, nihaoshi 等
     --    根据设置选择方案A（贪心）或方案B（全部）
     local prefixBoundaries
-    if WI_SEG_MODE == 1 then
+    if WowCNConfig:Get("segMode") == 1 then
         prefixBoundaries = WowCNDB_GetGreedyPrefixBoundaries(inputLetters)
     else
         prefixBoundaries = WowCNDB_GetAllPrefixBoundaries(inputLetters)

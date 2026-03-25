@@ -9,7 +9,7 @@
 ## Notes-zhCN: WoW 中文输入插件
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
-## SavedVariables: WI_SEG_MODE, WI_CHAT_TOP, WI_CACHE_ENABLED, WI_CACHE_MAX, WI_USER_DICT_ENABLED, WI_USER_DICT_MAX, WI_HL_COLOR, WI_DICT_ENABLED, WI_USER_DICT, WI_DEBUG
+## SavedVariables: WowCNInputDB
 
 # 配置常量
 Core\Config.lua
