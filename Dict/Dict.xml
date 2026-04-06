@@ -1,0 +1,7 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Include file="Pinyin\Pinyin_Base_Dict.lua"/>
+    <Include file="Pinyin\Pinyin_Daily_Dict.lua"/>
+    <Include file="Pinyin\Pinyin_Letter_Dict.lua"/>
+    <Include file="Pinyin\Pinyin_Mark_Dict.lua"/>
+    <Include file="Pinyin\Pinyin_Wow_Dict.lua"/>
+</Ui>

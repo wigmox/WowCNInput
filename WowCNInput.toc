@@ -11,24 +11,11 @@
 ## LoadOnDemand: 0
 ## SavedVariables: WowCNInputDB
 
-# 配置常量
-Core\Config.lua
-
-# IME 引擎
-Core\IME_Engine.lua
+# 核心配置
+Core\Core.xml
 
 # 词库文件
-Dict\Pinyin\Pinyin_Letter_Dict.lua
-Dict\Pinyin\Pinyin_Mark_Dict.lua
-Dict\Pinyin\Pinyin_Base_Dict.lua
-Dict\Pinyin\Pinyin_Daily_Dict.lua
-Dict\Pinyin\Pinyin_Wow_Dict.lua
+Dict\Dict.xml
 
-# 输入处理
-Core\InputHandler.lua
-
-# 事件处理
-Core\Event.lua
-
-# UI 定义（触发 OnLoad）
+# UI 定义
 Core\UI.xml
