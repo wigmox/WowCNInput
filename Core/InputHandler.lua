@@ -55,6 +55,75 @@ function WowCNInput_ClearState()
 end
 
 --[[
+    WowCNInput_ApplyUISettings - 应用候选区UI设置
+    说明: 根据配置更新候选区的字体大小、缩放和宽度
+]]
+function WowCNInput_ApplyUISettings()
+    if not WowCNInputFrame then return end
+    
+    local pinyinFontSize = WowCNConfig:Get("pinyinFontSize") or 16
+    local candidateFontSize = WowCNConfig:Get("candidateFontSize") or 16
+    local scale = WowCNConfig:Get("candidateScale") or 1.0
+    local width = WowCNConfig:Get("candidateWidth") or 500
+    
+    -- 应用缩放
+    WowCNInputFrame:SetScale(scale)
+    
+    -- 应用宽度
+    WowCNInputFrame:SetWidth(width)
+    
+    -- 计算内部元素宽度（减去边距）
+    local innerWidth = width - 40
+    
+    -- 应用拼音字体大小
+    if LettersArea then
+        LettersArea:SetWidth(innerWidth)
+        LettersArea:SetHeight(pinyinFontSize + 6)
+        local font, fontSize, flags = LettersArea:GetFont()
+        if font then
+            LettersArea:SetFont(font, pinyinFontSize, flags)
+        end
+    end
+    
+    -- 应用分页字体大小（跟随拼音字体）
+    if InfoArea then
+        InfoArea:SetHeight(pinyinFontSize + 6)
+        local font, fontSize, flags = InfoArea:GetFont()
+        if font then
+            InfoArea:SetFont(font, pinyinFontSize, flags)
+        end
+    end
+    
+    -- 更新分隔线位置和宽度
+    if SeparatorLine then
+        SeparatorLine:SetWidth(innerWidth)
+        -- 分隔线位置：拼音行下方 + 2像素间距
+        SeparatorLine:ClearAllPoints()
+        SeparatorLine:SetPoint("TOPLEFT", WowCNInputFrame, "TOPLEFT", 10, -(8 + pinyinFontSize + 8))
+    end
+    
+    -- 应用候选字字体大小
+    if CanArea then
+        CanArea:SetWidth(innerWidth)
+        CanArea:SetHeight(candidateFontSize + 6)
+        -- 候选区位置：分隔线(2像素)下方 + 4像素间距
+        CanArea:ClearAllPoints()
+        CanArea:SetPoint("TOPLEFT", WowCNInputFrame, "TOPLEFT", 8, -(8 + pinyinFontSize + 10 + 2 + 4))
+        local font, fontSize, flags = CanArea:GetFont()
+        if font then
+            CanArea:SetFont(font, candidateFontSize, flags)
+        end
+    end
+    
+    -- 调整框架高度（确保有足够的边距容纳文字和分隔线）
+    -- 上边距8 + 拼音行(字体+6) + 分隔线间距4 + 分隔线(2) + 间距4 + 候选行(字体+6) + 下边距8
+    local frameHeight = 8 + (pinyinFontSize + 6) + 4 + 2 + 4 + (candidateFontSize + 6) + 8
+    WowCNInputFrame:SetHeight(frameHeight)
+    
+    WowCNInput_Debug("UI设置已应用: 拼音字体=" .. pinyinFontSize .. " 候选字字体=" .. candidateFontSize .. " 缩放=" .. scale .. " 宽度=" .. width .. " 高度=" .. frameHeight)
+end
+
+--[[
     WowCNInput_ConfirmEnglish - 确认输入英文
     参数: textLen - 当前文本长度
 ]]

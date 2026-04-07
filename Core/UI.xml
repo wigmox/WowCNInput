@@ -18,16 +18,28 @@
 						<Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="-8" /></Offset></Anchor>
 					</Anchors>
 				</FontString>
+			</Layer>
+			<!-- 分隔线 - 使用独立的Layer确保显示在最上层 -->
+			<Layer level="OVERLAY">
+				<Texture name="SeparatorLine">
+					<Size><AbsDimension x="460" y="2" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="-30" /></Offset></Anchor>
+					</Anchors>
+					<Color r="0.5" g="0.5" b="0.5" a="0.8"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
 				<FontString name="CanArea" inherits="GameFontNormal" hidden="false" justifyV="MIDDLE" justifyH="LEFT">
 					<Size><AbsDimension x="460" y="26" /></Size>
 					<Anchors>
-						<Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="-28" /></Offset></Anchor>
+						<Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="-35" /></Offset></Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="InfoArea" inherits="GameFontNormalSmall" hidden="false" justifyV="MIDDLE" justifyH="RIGHT">
-					<Size><AbsDimension x="40" y="26" /></Size>
+					<Size><AbsDimension x="60" y="30" /></Size>
 					<Anchors>
-						<Anchor point="TOPRIGHT"><Offset><AbsDimension x="-8" y="-8" /></Offset></Anchor>
+						<Anchor point="TOPRIGHT"><Offset><AbsDimension x="-8" y="-6" /></Offset></Anchor>
 					</Anchors>
 				</FontString>
 			</Layer>

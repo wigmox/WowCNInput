@@ -25,6 +25,11 @@ WowCNConfig.DEFAULTS = {
     userDictMax = 1000,             -- 用户词库最大数量
     debugEnabled = false,           -- 调试模式
     hlColor = '|cff00dddd',         -- 高亮颜色
+    -- 候选区设置
+    pinyinFontSize = 16,            -- 拼音字体大小 (16-24)
+    candidateFontSize = 16,         -- 候选字字体大小 (16-24)
+    candidateScale = 1.0,           -- 候选区缩放 (1.0-2.0)
+    candidateWidth = 500,           -- 候选区宽度 (500-800)
 }
 
 -- ============================================================================
@@ -68,6 +73,10 @@ function WowCNConfig:Get(key)
     if not WowCNInputDB then
         return self.DEFAULTS[key]
     end
+    -- 如果 WowCNInputDB 中没有该键，返回默认值
+    if WowCNInputDB[key] == nil then
+        return self.DEFAULTS[key]
+    end
     return WowCNInputDB[key]
 end
 
@@ -92,9 +101,18 @@ local PADDING = 15
 local BUTTON_HEIGHT = 28
 local SIDEBAR_WIDTH = 120
 
+-- [调整按钮颜色常量]
+local BUTTON_COLOR_NORMAL = {0.15, 0.15, 0.15, 1}
+local BUTTON_COLOR_HOVER = {0.8, 0.6, 0.1, 1}
+local BUTTON_BORDER_NORMAL = {0.4, 0.4, 0.4, 1}
+local BUTTON_BORDER_HOVER = {0.8, 0.6, 0.1, 1}
+local BUTTON_TEXT_NORMAL = {1, 1, 1}
+local BUTTON_TEXT_HOVER = {1, 1, 0.7}
+
 -- [设置页定义]
 local SECTIONS = {
     {id = "general", name = "常规设置"},
+    {id = "candidate", name = "候选区设置"},
     {id = "dict", name = "词库设置"},
     {id = "about", name = "关于"},
 }
@@ -313,6 +331,7 @@ end
 ]]
 function WowCNConfig.UI:CreateContentSections()
     self:CreateGeneralSection()
+    self:CreateCandidateSection()
     self:CreateDictSection()
     self:CreateAboutSection()
 end
@@ -445,6 +464,170 @@ function WowCNConfig.UI:CreateSectionBox(parent, title, height)
     box.contentLeft = 15
     
     return box
+end
+
+--[[
+    WowCNConfig.UI:CreateAdjustControl - 创建带增减按钮的调整控件
+    参数: parent - 父容器
+          label - 标签文本
+          getFunc - 获取值函数
+          setFunc - 设置值函数
+          minVal - 最小值
+          maxVal - 最大值
+          step - 步进值
+    返回: 控件容器
+]]
+function WowCNConfig.UI:CreateAdjustControl(parent, label, getFunc, setFunc, minVal, maxVal, step)
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetWidth(300)
+    container:SetHeight(24)
+    
+    -- 标签
+    local labelText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    labelText:SetPoint("LEFT", container, "LEFT", 0, 0)
+    labelText:SetText(label)
+    labelText:SetWidth(140)
+    labelText:SetJustifyH("LEFT")
+    
+    -- 减少按钮 (WoW 1.12 兼容：使用Frame模拟按钮)
+    local decButton = CreateFrame("Button", nil, container)
+    decButton:SetWidth(22)
+    decButton:SetHeight(22)
+    decButton:SetPoint("LEFT", labelText, "RIGHT", 5, 0)
+    decButton:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    })
+    decButton:SetBackdropColor(unpack(BUTTON_COLOR_NORMAL))
+    decButton:SetBackdropBorderColor(unpack(BUTTON_BORDER_NORMAL))
+    
+    -- 按钮文本
+    local decText = decButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    decText:SetPoint("CENTER", decButton, "CENTER", 0, 0)
+    decText:SetText("-")
+    decText:SetTextColor(unpack(BUTTON_TEXT_NORMAL))
+    decButton.text = decText
+    
+    decButton:SetScript("OnEnter", function()
+        this:SetBackdropColor(unpack(BUTTON_COLOR_HOVER))
+        this:SetBackdropBorderColor(unpack(BUTTON_BORDER_HOVER))
+        this.text:SetTextColor(unpack(BUTTON_TEXT_HOVER))
+    end)
+    decButton:SetScript("OnLeave", function()
+        this:SetBackdropColor(unpack(BUTTON_COLOR_NORMAL))
+        this:SetBackdropBorderColor(unpack(BUTTON_BORDER_NORMAL))
+        this.text:SetTextColor(unpack(BUTTON_TEXT_NORMAL))
+    end)
+    decButton:SetScript("OnClick", function()
+        local currentVal = tonumber(getFunc()) or minVal
+        local newVal = currentVal - step
+        if newVal < minVal then newVal = minVal end
+        newVal = math.floor(newVal * 10 + 0.5) / 10
+        setFunc(newVal)
+        container.editBox:SetText(tostring(newVal))
+    end)
+    
+    -- 输入框
+    local editBox = CreateFrame("EditBox", nil, container)
+    editBox:SetWidth(50)
+    editBox:SetHeight(20)
+    editBox:SetPoint("LEFT", decButton, "RIGHT", 2, 0)
+    editBox:SetAutoFocus(false)
+    editBox:SetFontObject(GameFontHighlight)
+    editBox:SetJustifyH("CENTER")
+    editBox:SetMaxLetters(6)
+    editBox:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    })
+    editBox:SetBackdropColor(0, 0, 0, 0.8)
+    editBox:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    editBox:SetText(tostring(getFunc() or ""))
+    container.editBox = editBox
+    
+    editBox:SetScript("OnEscapePressed", function()
+        this:ClearFocus()
+        this:SetText(tostring(getFunc() or ""))
+    end)
+    
+    editBox:SetScript("OnEnterPressed", function()
+        this:ClearFocus()
+        local val = tonumber(this:GetText())
+        if val then
+            if val < minVal then val = minVal end
+            if val > maxVal then val = maxVal end
+            setFunc(val)
+            this:SetText(tostring(val))
+        end
+    end)
+    
+    editBox:SetScript("OnEditFocusLost", function()
+        local val = tonumber(this:GetText())
+        if val then
+            if val < minVal then val = minVal end
+            if val > maxVal then val = maxVal end
+            setFunc(val)
+            this:SetText(tostring(val))
+        end
+    end)
+    
+    -- 增加按钮 (WoW 1.12 兼容：使用Frame模拟按钮)
+    local incButton = CreateFrame("Button", nil, container)
+    incButton:SetWidth(22)
+    incButton:SetHeight(22)
+    incButton:SetPoint("LEFT", editBox, "RIGHT", 2, 0)
+    incButton:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    })
+    incButton:SetBackdropColor(unpack(BUTTON_COLOR_NORMAL))
+    incButton:SetBackdropBorderColor(unpack(BUTTON_BORDER_NORMAL))
+    
+    -- 按钮文本
+    local incText = incButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    incText:SetPoint("CENTER", incButton, "CENTER", 0, 0)
+    incText:SetText("+")
+    incText:SetTextColor(unpack(BUTTON_TEXT_NORMAL))
+    incButton.text = incText
+    
+    incButton:SetScript("OnEnter", function()
+        this:SetBackdropColor(unpack(BUTTON_COLOR_HOVER))
+        this:SetBackdropBorderColor(unpack(BUTTON_BORDER_HOVER))
+        this.text:SetTextColor(unpack(BUTTON_TEXT_HOVER))
+    end)
+    incButton:SetScript("OnLeave", function()
+        this:SetBackdropColor(unpack(BUTTON_COLOR_NORMAL))
+        this:SetBackdropBorderColor(unpack(BUTTON_BORDER_NORMAL))
+        this.text:SetTextColor(unpack(BUTTON_TEXT_NORMAL))
+    end)
+    incButton:SetScript("OnClick", function()
+        local currentVal = tonumber(getFunc()) or minVal
+        local newVal = currentVal + step
+        if newVal > maxVal then newVal = maxVal end
+        newVal = math.floor(newVal * 10 + 0.5) / 10
+        setFunc(newVal)
+        container.editBox:SetText(tostring(newVal))
+    end)
+    
+    -- 范围提示
+    local rangeText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rangeText:SetPoint("LEFT", incButton, "RIGHT", 8, 0)
+    rangeText:SetTextColor(0.5, 0.5, 0.5)
+    rangeText:SetText("(" .. minVal .. "-" .. maxVal .. ")")
+    
+    return container
 end
 
 --[[
@@ -625,6 +808,76 @@ function WowCNConfig.UI:CreateGeneralSection()
     local currentSegMode = WowCNConfig:Get("segMode") or 1
     UIDropDownMenu_SetSelectedValue(segModeDropdown, currentSegMode)
     UIDropDownMenu_SetText(currentSegMode == 1 and SEG_MODE_GREEDY_TEXT or SEG_MODE_AII_TEXT, segModeDropdown)
+end
+
+--[[
+    WowCNConfig.UI:CreateCandidateSection - 创建候选区设置页
+]]
+function WowCNConfig.UI:CreateCandidateSection()
+    local content = self.frame.content
+    local section = CreateFrame("Frame", nil, content)
+    section:SetPoint("TOPLEFT", content, "TOPLEFT", 5, 0)
+    section:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -5, 5)
+    section:Hide()
+    self.contentSections["candidate"] = section
+    
+    -- 候选区设置分组
+    local candidateBox = self:CreateSectionBox(section, "候选区设置", 200)
+    candidateBox:SetPoint("TOP", section, "TOP", 0, 0)
+    
+    local yPos = candidateBox.contentTop
+    local leftColX = candidateBox.contentLeft
+    
+    -- 拼音字体大小 (步进1)
+    local pinyinControl = self:CreateAdjustControl(candidateBox, "拼音字体大小:",
+        function() return WowCNConfig:Get("pinyinFontSize") end,
+        function(val)
+            WowCNConfig:Set("pinyinFontSize", val)
+            WowCNInput_ApplyUISettings()
+        end,
+        16, 24, 1)
+    pinyinControl:SetPoint("TOPLEFT", candidateBox, "TOPLEFT", leftColX, yPos)
+    yPos = yPos - 35
+    
+    -- 候选字字体大小 (步进1)
+    local candControl = self:CreateAdjustControl(candidateBox, "候选字字体大小:",
+        function() return WowCNConfig:Get("candidateFontSize") end,
+        function(val)
+            WowCNConfig:Set("candidateFontSize", val)
+            WowCNInput_ApplyUISettings()
+        end,
+        16, 24, 1)
+    candControl:SetPoint("TOPLEFT", candidateBox, "TOPLEFT", leftColX, yPos)
+    yPos = yPos - 35
+    
+    -- 候选区缩放 (步进0.1)
+    local scaleControl = self:CreateAdjustControl(candidateBox, "候选区缩放:",
+        function() return WowCNConfig:Get("candidateScale") end,
+        function(val)
+            WowCNConfig:Set("candidateScale", val)
+            WowCNInput_ApplyUISettings()
+        end,
+        1.0, 2.0, 0.1)
+    scaleControl:SetPoint("TOPLEFT", candidateBox, "TOPLEFT", leftColX, yPos)
+    yPos = yPos - 35
+    
+    -- 候选区宽度 (步进5)
+    local widthControl = self:CreateAdjustControl(candidateBox, "候选区宽度:",
+        function() return WowCNConfig:Get("candidateWidth") end,
+        function(val)
+            WowCNConfig:Set("candidateWidth", val)
+            WowCNInput_ApplyUISettings()
+        end,
+        500, 800, 5)
+    widthControl:SetPoint("TOPLEFT", candidateBox, "TOPLEFT", leftColX, yPos)
+    
+    yPos = yPos - 35
+    
+    -- 说明文本
+    local descLabel = candidateBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    descLabel:SetPoint("TOPLEFT", candidateBox, "TOPLEFT", leftColX, yPos)
+    descLabel:SetTextColor(0.6, 0.6, 0.6)
+    descLabel:SetText("提示: 如果字体过大可能无法显示完整，可适当调整候选框长度。")
 end
 
 --[[

@@ -131,6 +131,8 @@ function WowCNInput_OnEvent(event)
         WowCNConfig:InitializeDB()
         WowCNDB_InitUserDict()
         WowCNEvent_HookAllKnownBoxes()
+        -- 应用候选区UI设置
+        WowCNInput_ApplyUISettings()
     elseif event == "ADDON_LOADED" then
         -- 在 ADDON_LOADED 事件中也初始化用户词库（以防 VARIABLES_LOADED 未触发）
         if arg1 == "WowCNInput" then
