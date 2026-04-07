@@ -8,7 +8,8 @@ WI_USER_DICT_NAME = "User_Dict"  -- 用户词库名称
 
 -- [全局词库表]
 WowCNDB = {
-    _dicts = {},          -- 已加载的词库列表 {dictName = dictData}
+    _dicts = {},          -- 已加载的普通词库 {dictName = dictData}
+    _userDict = nil,      -- 用户词库单独存储（优先查询）
     _dictCount = 0,       -- 已加载词库数量
     _cache = {},          -- 候选词查询缓存
     _cacheSize = 0,       -- 当前缓存大小
@@ -275,8 +276,13 @@ function WowCNDB_RegisterDict(dictName, dictData, dictMeta)
         return 
     end
     
-    WowCNDB._dicts[dictName] = dictData
-    WowCNDB._dictCount = WowCNDB._dictCount + 1
+    -- 用户词库单独存储（优先查询）
+    if dictName == WI_USER_DICT_NAME then
+        WowCNDB._userDict = dictData
+    else
+        WowCNDB._dicts[dictName] = dictData
+        WowCNDB._dictCount = WowCNDB._dictCount + 1
+    end
     
     if dictMeta then
         if not WowCNDB._meta then WowCNDB._meta = {} end
@@ -319,21 +325,39 @@ function WowCNDB_GetCandidates(inputCode)
     local matchedCodes = {}
     local seenWords = {}
     
-    -- 直接查找 O(1) - 遍历词库列表，但每个词库只做一次哈希查找
+    -- [1] 优先查询用户词库（O(1)）
+    local userCandidates = {}
+    if WowCNDB._userDict then
+        local words = WowCNDB._userDict[inputCode]
+        if words then
+            for i = 1, table.getn(words) do
+                local word, time
+                if type(words[i]) == "table" then
+                    word = words[i].word
+                    time = words[i].time or 0
+                else
+                    word = words[i]
+                end
+                if word and not seenWords[word] then
+                    seenWords[word] = true
+                    if time then
+                        table.insert(userCandidates, {word = word, time = time})
+                    else
+                        table.insert(candidates, word)
+                        table.insert(matchedCodes, inputCode)
+                    end
+                end
+            end
+        end
+    end
+    
+    -- [2] 遍历其他词库（O(N)，N为词库数量）
     for dictName, dictData in pairs(WowCNDB._dicts) do
-        -- 检查词库是否启用
         if dictEnabled[dictName] ~= false then
             local words = dictData[inputCode]
             if words then
                 for i = 1, table.getn(words) do
-                    -- 用户词库使用新格式 {word=..., time=...}，其他词库使用字符串
-                    local word
-                    if dictName == WI_USER_DICT_NAME and type(words[i]) == "table" then
-                        word = words[i].word
-                    else
-                        word = words[i]
-                    end
-                    
+                    local word = words[i]
                     if word and not seenWords[word] then
                         seenWords[word] = true
                         table.insert(candidates, word)
@@ -342,6 +366,34 @@ function WowCNDB_GetCandidates(inputCode)
                 end
             end
         end
+    end
+    
+    -- [3] 用户词库候选词按时间排序并插入到最前面
+    local userCount = table.getn(userCandidates)
+    if userCount > 0 then
+        table.sort(userCandidates, function(a, b)
+            return a.time > b.time
+        end)
+        
+        -- 创建最终结果表
+        local finalCandidates = {}
+        local finalMatchedCodes = {}
+        
+        -- 先插入排序后的用户词库候选词
+        for i = 1, userCount do
+            table.insert(finalCandidates, userCandidates[i].word)
+            table.insert(finalMatchedCodes, inputCode)
+        end
+        
+        -- 再追加其他词库候选词
+        local otherCount = table.getn(candidates)
+        for i = 1, otherCount do
+            table.insert(finalCandidates, candidates[i])
+            table.insert(finalMatchedCodes, matchedCodes[i])
+        end
+        
+        candidates = finalCandidates
+        matchedCodes = finalMatchedCodes
     end
     
     -- 仅在启用缓存时更新缓存
