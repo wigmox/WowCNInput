@@ -3,4 +3,5 @@
     <Include file="Event.lua"/>
     <Include file="IME_Engine.lua"/>
     <Include file="InputHandler.lua"/>
+    <Include file="Minimap.lua"/>
 </Ui>

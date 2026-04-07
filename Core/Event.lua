@@ -103,6 +103,8 @@ function WowCNInput_Toggle()
         WowCNInput_ClearState()
         WowCNInputFrame:Hide()
     end
+    -- 更新小地图图标
+    WowCNMinimap_UpdateIcon()
 end
 
 --[[
@@ -111,6 +113,9 @@ end
 SlashCmdList["WCI_SWITCH"] = function(msg)
     if msg == "config" or msg == "setup" or msg == "ui" then
         WowCNConfig.UI:Toggle()
+    elseif msg == "minimap" then
+        WowCNMinimap_Show()
+        Print("小地图图标已显示")
     else
         WowCNInput_Toggle()
     end
@@ -133,6 +138,8 @@ function WowCNInput_OnEvent(event)
         WowCNEvent_HookAllKnownBoxes()
         -- 应用候选区UI设置
         WowCNInput_ApplyUISettings()
+        -- 初始化小地图按钮
+        WowCNMinimap_Init()
     elseif event == "ADDON_LOADED" then
         -- 在 ADDON_LOADED 事件中也初始化用户词库（以防 VARIABLES_LOADED 未触发）
         if arg1 == "WowCNInput" then

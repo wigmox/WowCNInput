@@ -30,6 +30,9 @@ WowCNConfig.DEFAULTS = {
     candidateFontSize = 16,         -- 候选字字体大小 (16-24)
     candidateScale = 1.0,           -- 候选区缩放 (1.0-2.0)
     candidateWidth = 500,           -- 候选区宽度 (500-800)
+    -- 小地图图标设置
+    minimapPos = 180,               -- 小地图图标位置角度 (0-360)
+    minimapHide = false,            -- 是否隐藏小地图图标
 }
 
 -- ============================================================================
