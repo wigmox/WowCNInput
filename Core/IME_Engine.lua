@@ -327,7 +327,7 @@ function WowCNDB_GetCandidates(inputCode)
     
     -- [1] 优先查询用户词库（O(1)）
     local userCandidates = {}
-    if WowCNDB._userDict then
+    if WowCNDB._userDict and dictEnabled[WI_USER_DICT_NAME] ~= false then
         local words = WowCNDB._userDict[inputCode]
         if words then
             for i = 1, table.getn(words) do

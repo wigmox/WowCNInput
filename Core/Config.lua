@@ -978,86 +978,113 @@ function WowCNConfig.UI:UpdateDictList()
     end
     
     local yPos = -10
+
+--[[
+    WowCNConfig.UI:CreateDictItem - 创建词库列表项
+    参数: dictName - 词库名称
+          meta - 词库元信息
+          yPos - Y坐标位置
+    返回: item - 创建的项对象
+]]
+function WowCNConfig.UI:CreateDictItem(dictName, meta, yPos)
     local widths = self.dictListBox.widths
+
+    -- 初始化启用状态
+    local dictEnabled = WowCNInputDB.dictEnabled or {}
+    if dictEnabled[dictName] == nil then
+        dictEnabled[dictName] = true
+        WowCNInputDB.dictEnabled = dictEnabled
+    end
     
+    local item = {}
+    local xPos = 5
+    
+    -- 启用复选框
+    local enableCheck = CreateFrame("CheckButton", nil, self.dictScrollChild, "UICheckButtonTemplate")
+    enableCheck:SetWidth(20)
+    enableCheck:SetHeight(20)
+    enableCheck:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos)
+    enableCheck:SetChecked(dictEnabled[dictName] and 1 or 0)
+    enableCheck.dictName = dictName  -- 保存词库名称
+    enableCheck:SetScript("OnClick", function()
+        local de = WowCNInputDB.dictEnabled or {}
+        de[this.dictName] = (this:GetChecked() == 1)
+        WowCNInputDB.dictEnabled = de
+        -- 清除缓存，使设置立即生效
+        WowCNDB._cache = {}
+        WowCNDB._cacheSize = 0
+    end)
+    item.check = enableCheck
+    
+    xPos = xPos + widths[1]
+    
+    -- 词库名称
+    local nameText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    nameText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
+    local name = meta.name or dictName or "?"
+    if string.len(name) > 24 then
+        name = string.sub(name, 1, 20) .. "..."
+    end
+    nameText:SetText(name)
+    item.name = nameText
+    
+    xPos = xPos + widths[2]
+    
+    -- 词条数
+    local countText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    countText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
+    countText:SetText(meta.count or "?")
+    item.count = countText
+    
+    xPos = xPos + widths[3]
+    
+    -- 版本
+    local versionText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    versionText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
+    versionText:SetText(meta.version or "1.0")
+    item.version = versionText
+    
+    xPos = xPos + widths[4]
+    
+    -- 日期
+    local dateText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    dateText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
+    dateText:SetText(meta.date or "?")
+    item.date = dateText
+    
+    xPos = xPos + widths[5]
+    
+    -- 作者
+    local authorText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    authorText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
+    local author = meta.author or "?"
+    if string.len(author) > 24 then
+        author = string.sub(author, 1, 20) .. "..."
+    end
+    authorText:SetText(author)
+    item.author = authorText
+    
+    return item
+end
+
+    
+    -- 普通词库
     for dictName, dictData in pairs(WowCNDB._dicts) do
         local meta = WowCNDB._meta and WowCNDB._meta[dictName] or {}
-        
-        -- 初始化启用状态
-        local dictEnabled = WowCNInputDB.dictEnabled or {}
-        if dictEnabled[dictName] == nil then
-            dictEnabled[dictName] = true
-            WowCNInputDB.dictEnabled = dictEnabled
+        local item = self:CreateDictItem(dictName, meta, yPos)
+        table.insert(self.dictItems, item)
+        yPos = yPos - 22
+    end
+    
+    -- 用户词库
+    if WowCNDB._userDict then
+        local userMeta = WowCNDB._meta and WowCNDB._meta[WI_USER_DICT_NAME] or {}
+        userMeta.count = WowCNDB_GetUserDictCount() .. "/" .. WowCNDB_UserDict._maxCount
+        local item = self:CreateDictItem(WI_USER_DICT_NAME, userMeta, yPos)
+        -- 用户词库名称高亮显示
+        if item.name then
+            item.name:SetTextColor(0.2, 1.0, 0.2)
         end
-        
-        local item = {}
-        local xPos = 5
-        
-        -- 启用复选框
-        local enableCheck = CreateFrame("CheckButton", nil, self.dictScrollChild, "UICheckButtonTemplate")
-        enableCheck:SetWidth(20)
-        enableCheck:SetHeight(20)
-        enableCheck:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos)
-        enableCheck:SetChecked(dictEnabled[dictName] and 1 or 0)
-        enableCheck.dictName = dictName  -- 保存词库名称
-        enableCheck:SetScript("OnClick", function()
-            local de = WowCNInputDB.dictEnabled or {}
-            de[this.dictName] = (this:GetChecked() == 1)
-            WowCNInputDB.dictEnabled = de
-            -- 清除缓存，使设置立即生效
-            WowCNDB._cache = {}
-            WowCNDB._cacheSize = 0
-        end)
-        item.check = enableCheck
-        
-        xPos = xPos + widths[1]
-        
-        -- 词库名称
-        local nameText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        nameText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
-        local name = meta.name or dictName or "?"
-        if string.len(name) > 24 then
-            name = string.sub(name, 1, 20) .. "..."
-        end
-        nameText:SetText(name)
-        item.name = nameText
-        
-        xPos = xPos + widths[2]
-        
-        -- 词条数
-        local countText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        countText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
-        countText:SetText(meta.count or "?")
-        item.count = countText
-        
-        xPos = xPos + widths[3]
-        
-        -- 版本
-        local versionText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        versionText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
-        versionText:SetText(meta.version or "1.0")
-        item.version = versionText
-        
-        xPos = xPos + widths[4]
-        
-        -- 日期
-        local dateText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        dateText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
-        dateText:SetText(meta.date or "?")
-        item.date = dateText
-        
-        xPos = xPos + widths[5]
-        
-        -- 作者
-        local authorText = self.dictScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        authorText:SetPoint("TOPLEFT", self.dictScrollChild, "TOPLEFT", xPos, yPos + 3)
-        local author = meta.author or "?"
-        if string.len(author) > 24 then
-            author = string.sub(author, 1, 20) .. "..."
-        end
-        authorText:SetText(author)
-        item.author = authorText
-        
         table.insert(self.dictItems, item)
         yPos = yPos - 22
     end
