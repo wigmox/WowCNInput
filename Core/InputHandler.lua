@@ -322,6 +322,8 @@ end
 ]]
 function WowCNInput_HookEditBox(box)
     if not box then return end
+    -- 类型验证：确保是 EditBox 类型
+    if not box.IsObjectType or not box:IsObjectType("EditBox") then return end
     if hookedBoxes[box] then return end
     hookedBoxes[box] = true
     

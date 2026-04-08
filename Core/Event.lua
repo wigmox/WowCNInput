@@ -9,6 +9,7 @@ local welcomeShown = false
 -- [目标编辑框列表] 所有可能需要输入中文的编辑框
 local TargetBoxes = {
     "ChatFrameEditBox",           -- 聊天框架编辑框
+    "DF_IntelliSense",            -- Dragonflight3 聊天输入框
     "MacroFrameText",             -- 宏命令大输入框
     "MacroPopupEditBox",          -- 宏新建起名框
     "GuildInfoEditBox",           -- 公会信息框
@@ -73,7 +74,8 @@ end
 function WowCNEvent_HookAllKnownBoxes()
     for i = 1, table.getn(TargetBoxes) do
         local box = getglobal(TargetBoxes[i])
-        if box and not WowCNInput_IsHooked(box) then
+        -- 类型验证：确保是 EditBox 类型
+        if box and box.IsObjectType and box:IsObjectType("EditBox") and not WowCNInput_IsHooked(box) then
             WowCNInput_HookEditBox(box)
         end
     end
