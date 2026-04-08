@@ -5,6 +5,7 @@
 
 -- [模块局部变量]
 local gIsDragging = false
+local gIsMouseDown = false
 local gMinimapButton = nil
 local gDragStartX = 0
 local gDragStartY = 0
@@ -97,6 +98,7 @@ local function WowCNMinimap_OnMouseDown()
     
     if arg1 == "LeftButton" then
         gIsDragging = false
+        gIsMouseDown = true
         local x, y = GetCursorPosition()
         gDragStartX = x
         gDragStartY = y
@@ -116,6 +118,7 @@ local function WowCNMinimap_OnMouseUp()
     end
     
     gIsDragging = false
+    gIsMouseDown = false
 end
 
 --[[
@@ -125,7 +128,7 @@ end
 local function WowCNMinimap_OnUpdate()
     if not gMinimapButton then return end
     
-    if IsMouseButtonDown("LeftButton") and IsShiftKeyDown() then
+    if gIsMouseDown and IsShiftKeyDown() then
         local x, y = GetCursorPosition()
         local dx = x - gDragStartX
         local dy = y - gDragStartY
@@ -191,6 +194,10 @@ function WowCNMinimap_Hide()
         gMinimapButton:Hide()
         WowCNConfig:Set("minimapHide", true)
         DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 小地图图标已隐藏，使用 /wi minimap 可重新显示")
+        -- 更新设置界面
+        if WowCNConfig and WowCNConfig.UI then
+            WowCNConfig.UI:Update()
+        end
     end
 end
 
@@ -201,6 +208,22 @@ function WowCNMinimap_Show()
     if gMinimapButton then
         gMinimapButton:Show()
         WowCNConfig:Set("minimapHide", false)
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00ddddWowCNInput:|r 小地图图标已显示")
+        -- 更新设置界面
+        if WowCNConfig and WowCNConfig.UI then
+            WowCNConfig.UI:Update()
+        end
+    end
+end
+
+--[[
+    WowCNMinimap_Toggle - 切换小地图图标显示/隐藏
+]]
+function WowCNMinimap_Toggle()
+    if WowCNConfig:Get("minimapHide") then
+        WowCNMinimap_Show()
+    else
+        WowCNMinimap_Hide()
     end
 end
 

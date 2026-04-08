@@ -97,14 +97,18 @@ end
 function WowCNInput_Toggle()
     WowCNState.imeEnabled = not WowCNState.imeEnabled
     if WowCNState.imeEnabled then
-        Print("中文输入插件已|cff00ff00【开启】|r")
+        Print("中文输入插件已|cff00ff00【已开启】|r")
     else 
-        Print("中文输入插件已|cffff0000【关闭】|r")
+        Print("中文输入插件已|cffff0000【已关闭】|r")
         WowCNInput_ClearState()
         WowCNInputFrame:Hide()
     end
     -- 更新小地图图标
     WowCNMinimap_UpdateIcon()
+    -- 更新设置界面
+    if WowCNConfig and WowCNConfig.UI then
+        WowCNConfig.UI:Update()
+    end
 end
 
 --[[
@@ -114,8 +118,7 @@ SlashCmdList["WCI_SWITCH"] = function(msg)
     if msg == "config" or msg == "setup" or msg == "ui" then
         WowCNConfig.UI:Toggle()
     elseif msg == "minimap" then
-        WowCNMinimap_Show()
-        Print("小地图图标已显示")
+        WowCNMinimap_Toggle()
     else
         WowCNInput_Toggle()
     end

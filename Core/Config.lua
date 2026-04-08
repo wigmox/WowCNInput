@@ -393,6 +393,14 @@ function WowCNConfig.UI:CreateCheckbox(parent, label, getFunc, setFunc, tooltipT
         setFunc(checked)
     end)
     
+    -- 将控件添加到控件列表
+    if self.frame then
+        if not self.frame.controls then
+            self.frame.controls = {}
+        end
+        table.insert(self.frame.controls, check)
+    end
+    
     return check
 end
 
@@ -652,13 +660,9 @@ function WowCNConfig.UI:CreateGeneralSection()
     local enabledCheck = self:CreateCheckbox(generalBox, "启用中文输入",
         function() return WowCNState.imeEnabled end,
         function(checked)
-            WowCNState.imeEnabled = checked
-            if checked then
-                DEFAULT_CHAT_FRAME:AddMessage("|cff00dddd中文输入插件:|r |cff00ff00【已开启】|r")
-            else
-                DEFAULT_CHAT_FRAME:AddMessage("|cff00dddd中文输入插件:|r |cffff0000【已关闭】|r")
-                WowCNInput_ClearState()
-                WowCNInputFrame:Hide()
+            -- 如果状态不同才切换
+            if WowCNState.imeEnabled ~= checked then
+                WowCNInput_Toggle()
             end
         end)
     enabledCheck:SetPoint("TOPLEFT", generalBox, "TOPLEFT", generalBox.contentLeft, generalBox.contentTop)
@@ -746,6 +750,19 @@ function WowCNConfig.UI:CreateGeneralSection()
             end
         end)
     chatTopCheck:SetPoint("TOPLEFT", userDictEnabledCheck, "BOTTOMLEFT", 0, -5)
+    
+    -- 显示小地图图标开关
+    local minimapShowCheck = self:CreateCheckbox(generalBox, "显示小地图图标",
+        function() return not WowCNConfig:Get("minimapHide") end,
+        function(checked)
+            WowCNConfig:Set("minimapHide", not checked)
+            if checked then
+                WowCNMinimap_Show()
+            else
+                WowCNMinimap_Hide()
+            end
+        end)
+    minimapShowCheck:SetPoint("TOPLEFT", chatTopCheck, "BOTTOMLEFT", 0, -5)
     
     -- 分词模式分组
     local segModeBox = self:CreateSectionBox(section, "分词模式", 100)
@@ -1198,6 +1215,8 @@ function WowCNConfig.UI:Show()
         self:CreateMainFrame()
     end
     self.frame:Show()
+    -- 显示时更新所有控件状态
+    self:Update()
 end
 
 --[[
@@ -1217,5 +1236,20 @@ function WowCNConfig.UI:Toggle()
         self:Hide()
     else
         self:Show()
+    end
+end
+
+--[[
+    WowCNConfig.UI:Update - 更新设置界面所有控件状态
+    说明: 当外部修改配置时调用，确保界面状态与配置同步
+]]
+function WowCNConfig.UI:Update()
+    if not self.frame then return end
+    
+    -- 遍历所有控件并更新状态
+    for _, control in pairs(self.frame.controls or {}) do
+        if control.getFunc then
+            control:SetChecked(control.getFunc() and 1 or 0)
+        end
     end
 end
