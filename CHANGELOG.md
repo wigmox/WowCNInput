@@ -1,5 +1,26 @@
 # 更新日志
 
+## [0.2.0](https://github.com/wigmox/WowCNInput/compare/v0.1.0...v0.2.0) (2026-04-09)
+
+
+### Features
+
+* 修改文件加载流程 ([d8b50a0](https://github.com/wigmox/WowCNInput/commit/d8b50a085caeeac170c22b70c2e9213ca5461269))
+* 增加全词动态调频。 ([f3c27f2](https://github.com/wigmox/WowCNInput/commit/f3c27f24b9921aacf44759a4e9c5b654dfd6c7ed))
+* 添加 -Dragonflight3 输入框支持。 ([e6b35ee](https://github.com/wigmox/WowCNInput/commit/e6b35ee26464ca0260a913c2dd16b55be8ba79e1))
+* 添加小地图图标 ([9b30a55](https://github.com/wigmox/WowCNInput/commit/9b30a55ceb476298bbad9cdb76bccf5635801a48))
+* 添加自定义词库优先功能，本地自定义词库优先到首位 ([c09e65f](https://github.com/wigmox/WowCNInput/commit/c09e65f2e3d6a1a5f21bc962e7d91c64e423d2a4))
+* 添加设置界面小地图图标开关功能。 ([0d89b30](https://github.com/wigmox/WowCNInput/commit/0d89b30fe4e1d6299c62cb4da6530d575dec934f))
+* 添加输入候选框长度、缩放，以及输入字母/候选字大小调整功能 ([67df087](https://github.com/wigmox/WowCNInput/commit/67df08745acb06f8870d7197a70c1d3d7636c3f2))
+
+
+### Bug Fixes
+
+* 修复小地图图标按下错误的问题。 ([0d89b30](https://github.com/wigmox/WowCNInput/commit/0d89b30fe4e1d6299c62cb4da6530d575dec934f))
+* 修复开启全词调频后时间戳没有清缓存，更新不及时的问题。 ([f3c27f2](https://github.com/wigmox/WowCNInput/commit/f3c27f24b9921aacf44759a4e9c5b654dfd6c7ed))
+* 修复编辑框判断，预防报错。 ([e6b35ee](https://github.com/wigmox/WowCNInput/commit/e6b35ee26464ca0260a913c2dd16b55be8ba79e1))
+* 修复设置界面用户词库不显示的问题 ([a6392b5](https://github.com/wigmox/WowCNInput/commit/a6392b52eda4c2e23a7c5fd48906e1038d040def))
+
 ## [0.1.0](https://github.com/wigmox/WowCNInput/compare/v0.0.8...v0.1.0) (2026-03-25)
 
 
