@@ -20,9 +20,10 @@ WowCNConfig.DEFAULTS = {
     chatTop = true,                 -- 聊天输入框位置
     segMode = 1,                    -- 分词模式 (1=最大候选, 2=全部候选)
     cacheEnabled = true,            -- 缓存启用
-    cacheMax = 300,                 -- 缓存最大数量
+    cacheMax = 500,                 -- 缓存最大数量
     userDictEnabled = true,         -- 用户词库启用
-    userDictMax = 1000,             -- 用户词库最大数量
+    userDictMax = 5000,             -- 用户词库最大数量
+    dynamicAdapt = true,            -- 全词动态调频
     debugEnabled = false,           -- 调试模式
     hlColor = '|cff00dddd',         -- 高亮颜色
     -- 候选区设置
@@ -723,6 +724,14 @@ function WowCNConfig.UI:CreateGeneralSection()
         end)
     userDictEdit:SetPoint("LEFT", userDictLabel, "RIGHT", 5, 0)
     
+    -- 全词动态调频开关
+    local dynamicAdaptCheck = self:CreateCheckbox(generalBox, "全词动态调频",
+        function() return WowCNConfig:Get("dynamicAdapt") end,
+        function(checked)
+            WowCNConfig:Set("dynamicAdapt", checked)
+        end)
+    dynamicAdaptCheck:SetPoint("TOPLEFT", userDictEnabledCheck, "BOTTOMLEFT", 0, -5)
+    
     -- 聊天输入框位置开关
     local chatTopCheck = self:CreateCheckbox(generalBox, "聊天输入框移至顶部",
         function() return WowCNConfig:Get("chatTop") end,
@@ -749,7 +758,7 @@ function WowCNConfig.UI:CreateGeneralSection()
                 end
             end
         end)
-    chatTopCheck:SetPoint("TOPLEFT", userDictEnabledCheck, "BOTTOMLEFT", 0, -5)
+    chatTopCheck:SetPoint("TOPLEFT", dynamicAdaptCheck, "BOTTOMLEFT", 0, -5)
     
     -- 显示小地图图标开关
     local minimapShowCheck = self:CreateCheckbox(generalBox, "显示小地图图标",

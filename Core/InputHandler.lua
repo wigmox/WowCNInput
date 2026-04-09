@@ -273,11 +273,16 @@ local function WowCNInput_DoSelectWord(box, prevText, searchPrevText, prevLetter
         return remainingCode
     else
         -- [学习逻辑] 选词完成，判断是否需要学习
-        -- 只有多次选词才学习（单次选词说明词库已有该词）
+        -- 全词动态调频：任何选词都学习；否则仅多次选词才学习
         -- 且用户词库功能已启用
-        if WowCNLearnState.selectCount > 1 and WowCNConfig:Get("userDictEnabled") then
-            local fullWord = table.concat(WowCNLearnState.selectedWords)
-            WowCNDB_LearnWord(WowCNLearnState.fullInputCode, fullWord)
+        if WowCNConfig:Get("userDictEnabled") then
+            local dynamicAdapt = WowCNConfig:Get("dynamicAdapt")
+            local shouldLearn = dynamicAdapt and WowCNLearnState.selectCount >= 1
+                or (not dynamicAdapt and WowCNLearnState.selectCount > 1)
+            if shouldLearn then
+                local fullWord = table.concat(WowCNLearnState.selectedWords)
+                WowCNDB_LearnWord(WowCNLearnState.fullInputCode, fullWord)
+            end
         end
         
         -- 重置学习状态

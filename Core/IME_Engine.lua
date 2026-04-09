@@ -192,6 +192,11 @@ function WowCNDB_LearnWord(inputCode, word)
         for i = 1, table.getn(words) do
             if words[i].word == word then
                 words[i].time = time()
+                -- 清除缓存，确保下次查询使用新的排序
+                if WowCNDB._cache[contKey] then
+                    WowCNDB._cache[contKey] = nil
+                    WowCNDB._cacheSize = WowCNDB._cacheSize - 1
+                end
                 return true
             end
         end
